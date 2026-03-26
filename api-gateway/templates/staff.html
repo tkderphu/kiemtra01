@@ -56,7 +56,7 @@
         .logout-btn:hover { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
 
         /* Main Content */
-        .main-content { flex: 1; padding: 40px; overflow-y: auto; background: var(--bg); }
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; background: var(--bg); position: relative; }
         .header-title { font-size: 28px; font-weight: 700; color: #0f172a; margin-bottom: 8px;}
         .header-subtitle { color: var(--text-light); font-size: 14px; margin-bottom: 30px; }
         .card { background: var(--surface); padding: 30px; border-radius: 16px; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06); border: 1px solid var(--border); margin-bottom: 30px;}
@@ -76,6 +76,10 @@
         .table-header h3 { font-size: 18px; font-weight: 600; color: #0f172a; }
         .refresh-btn { background: #f1f5f9; color: var(--text-main); padding: 8px 16px; font-size: 14px; border-radius: 6px; border: 1px solid var(--border); font-weight: 500; cursor: pointer; transition: all 0.2s;}
         .refresh-btn:hover { background: #e2e8f0; }
+        .action-btn { background: transparent; color: var(--primary); border: 1px solid var(--primary); padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif;}
+        .action-btn:hover { background: #eff6ff; }
+        .action-btn.del { color: var(--danger); border-color: var(--danger); margin-left: 8px;}
+        .action-btn.del:hover { background: #fef2f2; }
 
         table { width: 100%; border-collapse: separate; border-spacing: 0; }
         th, td { padding: 16px 24px; text-align: left; border-bottom: 1px solid var(--border); }
@@ -93,6 +97,17 @@
         .form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text-main); }
         .form-group select, .form-group input { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 15px; outline: none; transition: border-color 0.2s; background: #fff;}
         .form-group select:focus, .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);}
+
+        /* Edit Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .modal-content { background: var(--surface); width: 100%; max-width: 500px; padding: 30px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); transform: translateY(-20px); transition: transform 0.3s; }
+        .modal-overlay.show .modal-content { transform: translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 15px;}
+        .modal-header h2 { font-size: 20px; font-weight: 700; color: #0f172a; margin: 0;}
+        .close-btn { background: none; border: none; font-size: 28px; color: var(--text-light); cursor: pointer; transition: color 0.2s; }
+        .close-btn:hover { color: var(--danger); }
+        
     </style>
 </head>
 <body>
@@ -121,7 +136,7 @@
             <h2>⚙️ Staff Panel</h2>
             <nav>
                 <a id="nav-overview" class="active" onclick="switchTab('overview')">📊 Tổng Quan</a>
-                <a id="nav-list" onclick="switchTab('list')">📄 Danh Sách Sản Phẩm</a>
+                <a id="nav-list" onclick="switchTab('list')">📄 Quản Lý Dữ Liệu</a>
                 <a id="nav-add" onclick="switchTab('add')">➕ Thêm Sản Phẩm Mới</a>
             </nav>
             <button class="logout-btn" onclick="logout()">🚪 Đăng Xuất</button>
@@ -156,8 +171,8 @@
             
             <!-- Product List Tab -->
             <div id="tab-list" class="hidden">
-                <h1 class="header-title">Quản Lý Sản Phẩm</h1>
-                <p class="header-subtitle">Danh mục các mặt hàng trong hệ thống</p>
+                <h1 class="header-title">Quản Lý Sản Phẩm - Kho</h1>
+                <p class="header-subtitle">Thêm/Sửa/Xoá các mặt hàng trong hệ thống trực tiếp</p>
                 
                 <div class="card">
                     <div class="table-header">
@@ -165,7 +180,14 @@
                         <button class="refresh-btn" onclick="loadProducts()">Làm mới dữ liệu</button>
                     </div>
                     <table>
-                        <thead><tr><th>Mã SP</th><th>Tên Dòng Máy</th><th>Giá Niêm Yết</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th>Mã SP</th>
+                                <th>Tên & Thương Hiệu</th>
+                                <th>Giá Niêm Yết</th>
+                                <th style="text-align: right;">Bảng Điều Khiển</th>
+                            </tr>
+                        </thead>
                         <tbody id="laptop-tbody"></tbody>
                     </table>
                 </div>
@@ -175,7 +197,14 @@
                         <h3>Kho Quần Áo 👕</h3>
                     </div>
                     <table>
-                        <thead><tr><th>Mã SP</th><th>Tên Trang Phục</th><th>Giá Niêm Yết</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th>Mã SP</th>
+                                <th>Tên & Thương Hiệu</th>
+                                <th>Giá Niêm Yết</th>
+                                <th style="text-align: right;">Bảng Điều Khiển</th>
+                            </tr>
+                        </thead>
                         <tbody id="clothes-tbody"></tbody>
                     </table>
                 </div>
@@ -198,14 +227,53 @@
                         <input type="text" id="prod-name" placeholder="VD: MacBook Pro M3 Max...">
                     </div>
                     <div class="form-group">
-                        <label>Giá bán ($)</label>
-                        <input type="number" id="prod-price" placeholder="VD: 2500">
+                        <label>Thương hiệu (Brand)</label>
+                        <input type="text" id="prod-brand" placeholder="VD: Apple, Asus, Uniqlo...">
                     </div>
-                    <button class="btn" style="width: auto; padding: 14px 30px; margin-top: 10px;" onclick="addProduct()">Xác nhận thêm</button>
+                    <div class="form-group">
+                        <label>Giá bán ($ / đ)</label>
+                        <input type="number" id="prod-price" placeholder="VD: 30000">
+                    </div>
+                    <div class="form-group">
+                        <label>Đường liên kết Ảnh (Image URL)</label>
+                        <input type="text" id="prod-img" placeholder="https://...">
+                    </div>
+                    <button class="btn" style="width: auto; padding: 14px 30px; margin-top: 10px;" onclick="addProduct()">Tạo Dữ Liệu SP Mới</button>
                 </div>
             </div>
 
         </div>
+
+        <!-- Edit Modal Inject -->
+        <div class="modal-overlay" id="edit-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>✏️ Sửa thông tin sản phẩm</h2>
+                    <button class="close-btn" onclick="closeEdit()">&times;</button>
+                </div>
+                <input type="hidden" id="edit-id">
+                <input type="hidden" id="edit-type">
+                
+                <div class="form-group">
+                    <label>Tên sản phẩm</label>
+                    <input type="text" id="edit-name">
+                </div>
+                <div class="form-group">
+                    <label>Thương hiệu (Brand)</label>
+                    <input type="text" id="edit-brand">
+                </div>
+                <div class="form-group">
+                    <label>Giá bán ($ / đ)</label>
+                    <input type="number" id="edit-price">
+                </div>
+                <div class="form-group">
+                    <label>Đường liên kết Ảnh (Image URL)</label>
+                    <input type="text" id="edit-img">
+                </div>
+                <button class="btn" onclick="submitEdit()">💾 Lưu Thay Đổi</button>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -306,7 +374,6 @@
                 document.getElementById('count-laptop').innerText = cLp;
             } catch (e) {
                 console.error("Lỗi:", e);
-                showToast("Không thể tải số liệu thống kê!", "error");
             }
         }
 
@@ -318,14 +385,25 @@
                 let lpHTML = '';
                 if(Array.isArray(laptops)) {
                     laptops.forEach(l => {
+                        const escapedName = l.name ? l.name.replace(/'/g, "\\'") : '';
+                        const escapedBrand = l.brand && l.brand !== 'Unknown' ? l.brand.replace(/'/g, "\\'") : '';
+                        const escapedImg = l.image_url ? l.image_url.replace(/'/g, "\\'") : '';
+                        
                         lpHTML += `<tr>
                             <td style="color: var(--text-light);">#${l.id}</td>
-                            <td style="font-weight: 600; color: #0f172a;">${l.name}</td>
-                            <td><span class="badge-price">$${l.price}</span></td>
+                            <td>
+                                <div style="font-weight: 600; color: #0f172a;">${l.name}</div>
+                                <div style="font-size: 13px; color: var(--text-light); margin-top:2px;">${l.brand || 'Khác'}</div>
+                            </td>
+                            <td><span class="badge-price">${Number(l.price).toLocaleString('vi-VN')} đ</span></td>
+                            <td style="text-align: right;">
+                                <button class="action-btn" onclick="openEdit('laptops', ${l.id}, '${escapedName}', '${escapedBrand}', ${l.price}, '${escapedImg}')">Sửa</button>
+                                <button class="action-btn del" onclick="deleteProduct('laptops', ${l.id}, '${escapedName}')">Xoá</button>
+                            </td>
                         </tr>`;
                     });
                 }
-                document.getElementById('laptop-tbody').innerHTML = lpHTML || '<tr><td colspan="3" style="text-align:center;">Dữ liệu trống</td></tr>';
+                document.getElementById('laptop-tbody').innerHTML = lpHTML || '<tr><td colspan="4" style="text-align:center;">Dữ liệu trống</td></tr>';
 
                 // Clothes
                 const clRes = await fetch('/clothes');
@@ -333,24 +411,37 @@
                 let clHTML = '';
                 if(Array.isArray(clothes)) {
                     clothes.forEach(c => {
+                        const escapedName = c.name ? c.name.replace(/'/g, "\\'") : '';
+                        const escapedBrand = c.brand && c.brand !== 'Unknown' ? c.brand.replace(/'/g, "\\'") : '';
+                        const escapedImg = c.image_url ? c.image_url.replace(/'/g, "\\'") : '';
+                        
                         clHTML += `<tr>
                             <td style="color: var(--text-light);">#${c.id}</td>
-                            <td style="font-weight: 600; color: #0f172a;">${c.name}</td>
-                            <td><span class="badge-price">$${c.price}</span></td>
+                            <td>
+                                <div style="font-weight: 600; color: #0f172a;">${c.name}</div>
+                                <div style="font-size: 13px; color: var(--text-light); margin-top:2px;">${c.brand || 'Khác'}</div>
+                            </td>
+                            <td><span class="badge-price">${Number(c.price).toLocaleString('vi-VN')} đ</span></td>
+                            <td style="text-align: right;">
+                                <button class="action-btn" onclick="openEdit('clothes', ${c.id}, '${escapedName}', '${escapedBrand}', ${c.price}, '${escapedImg}')">Sửa</button>
+                                <button class="action-btn del" onclick="deleteProduct('clothes', ${c.id}, '${escapedName}')">Xoá</button>
+                            </td>
                         </tr>`;
                     });
                 }
-                document.getElementById('clothes-tbody').innerHTML = clHTML || '<tr><td colspan="3" style="text-align:center;">Dữ liệu trống</td></tr>';
+                document.getElementById('clothes-tbody').innerHTML = clHTML || '<tr><td colspan="4" style="text-align:center;">Dữ liệu trống</td></tr>';
             } catch (e) {
                 console.error("Lỗi:", e);
-                showToast("Lỗi khi tải dữ liệu sản phẩm!", "error");
+                showToast("Lỗi kết nối khi tải dữ liệu sản phẩm", "error");
             }
         }
 
         async function addProduct() {
             const type = document.getElementById('prod-type').value;
             const name = document.getElementById('prod-name').value;
+            const brand = document.getElementById('prod-brand').value;
             const price = document.getElementById('prod-price').value;
+            const img = document.getElementById('prod-img').value;
 
             if(!name || !price) {
                 showToast("Dữ liệu không hợp lệ! Nhập đủ Tên và Giá.", "error");
@@ -358,16 +449,25 @@
             }
 
             try {
+                const payload = {
+                    name: name,
+                    brand: brand || 'Khác',
+                    price: parseFloat(price),
+                    image_url: img
+                };
+                
                 const res = await fetch(`/${type}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: name, price: parseFloat(price) })
+                    body: JSON.stringify(payload)
                 });
                 
                 if(res.ok) {
                     showToast(`Đã thêm thành công: ${name}`);
                     document.getElementById('prod-name').value = '';
+                    document.getElementById('prod-brand').value = '';
                     document.getElementById('prod-price').value = '';
+                    document.getElementById('prod-img').value = '';
                 } else {
                     showToast("Lỗi từ server khi thêm dữ liệu!", "error");
                 }
@@ -375,6 +475,78 @@
                 showToast("Lỗi kết nối mạng!", "error");
             }
         }
+
+        // --- Edit / Delete Logics --- //
+        
+        function openEdit(type, id, name, brand, price, img) {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-type').value = type;
+            document.getElementById('edit-name').value = name;
+            document.getElementById('edit-brand').value = brand;
+            document.getElementById('edit-price').value = price;
+            document.getElementById('edit-img').value = img;
+            
+            document.getElementById('edit-modal').classList.add('show');
+        }
+
+        function closeEdit() {
+            document.getElementById('edit-modal').classList.remove('show');
+        }
+
+        async function submitEdit() {
+            const id = document.getElementById('edit-id').value;
+            const type = document.getElementById('edit-type').value;
+            const name = document.getElementById('edit-name').value;
+            const brand = document.getElementById('edit-brand').value;
+            const price = document.getElementById('edit-price').value;
+            const img = document.getElementById('edit-img').value;
+
+            if(!name || !price) {
+                showToast("Tên và dòng giá không được bỏ trống!", "error");
+                return;
+            }
+
+            try {
+                const res = await fetch(`/${type}/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        name: name, 
+                        brand: brand || 'Khác', 
+                        image_url: img, 
+                        price: parseFloat(price) 
+                    })
+                });
+                
+                if(res.ok) {
+                    showToast(`Cập nhật thành công!`);
+                    closeEdit();
+                    loadProducts(); // refresh table
+                } else {
+                    showToast("Lỗi khi cập nhật trên Server!", "error");
+                }
+            } catch (e) {
+                showToast("Lỗi kết nối mạng", "error");
+            }
+        }
+
+        async function deleteProduct(type, id, name) {
+            if(!confirm(`Xác nhận XOÁ mặt hàng "${name}" khỏi kho? Cảnh báo: Việc này không thể hoàn tác!`)) {
+                return;
+            }
+            try {
+                const res = await fetch(`/${type}/${id}`, { method: 'DELETE' });
+                if(res.ok) {
+                    showToast(`Đã xoá thành công sản phẩm #${id} !`);
+                    loadProducts();
+                } else {
+                    showToast("Xảy ra lỗi khi xoá", "error");
+                }
+            } catch (e) {
+                showToast("Lỗi đường truyền mạng", "error");
+            }
+        }
+
     </script>
 </body>
 </html>
