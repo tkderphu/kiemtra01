@@ -2,53 +2,94 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Customer Shop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Premium Shop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f6f9; }
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary: #ec4899;
+            --bg: #f3f4f6;
+            --surface: #ffffff;
+            --text-main: #1f2937;
+            --text-light: #6b7280;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg); color: var(--text-main); line-height: 1.6; }
         .hidden { display: none !important; }
         
+        /* Toast Notification */
+        #toast-container { position: fixed; bottom: 30px; right: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 15px; pointer-events: none;}
+        .toast { background: var(--surface); color: var(--text-main); padding: 15px 25px; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); border-left: 5px solid var(--primary); font-weight: 500;}
+        .toast.show { transform: translateX(0); }
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--danger); }
+
         /* Auth View */
-        .auth-container { max-width: 400px; margin: 100px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .auth-container input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .auth-container button { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px; }
-        .auth-container button.sec { background: #6c757d; }
-        
+        .auth-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px;}
+        .auth-container { width: 100%; max-width: 420px; background: var(--surface); padding: 40px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .auth-container h2 { text-align: center; color: var(--text-main); margin-bottom: 30px; font-weight: 700; font-size: 32px;}
+        .input-group { margin-bottom: 20px; }
+        .input-group input { width: 100%; padding: 16px; border: 2px solid #e5e7eb; border-radius: 12px; font-family: 'Poppins', sans-serif; font-size: 15px; transition: all 0.3s; outline: none; background: #f9fafb;}
+        .input-group input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);}
+        .btn { width: 100%; padding: 16px; background: linear-gradient(to right, var(--primary), #818cf8); color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: 600; font-family: 'Poppins', sans-serif; transition: all 0.3s; box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.39); margin-bottom: 15px;}
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4); }
+        .btn.sec { background: transparent; color: var(--text-light); border: 2px solid #e5e7eb; box-shadow: none;}
+        .btn.sec:hover { border-color: var(--text-main); color: var(--text-main); transform: none; background: #f9fafb;}
+
         /* Navbar */
-        .navbar { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .navbar .brand { font-size: 24px; font-weight: bold; color: #28a745; cursor: pointer; }
-        .navbar .nav-links a { margin-left: 20px; text-decoration: none; color: #333; font-weight: 500; cursor: pointer; transition: color 0.3s; padding-bottom: 5px; }
-        .navbar .nav-links a:hover, .navbar .nav-links a.active { color: #28a745; border-bottom: 2px solid #28a745; }
+        .navbar { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .navbar .brand { font-size: 26px; font-weight: 800; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; cursor: pointer; letter-spacing: -0.5px;}
+        .navbar .nav-links { display: flex; align-items: center; gap: 35px; }
+        .navbar .nav-links a { text-decoration: none; color: var(--text-light); font-weight: 600; cursor: pointer; transition: color 0.3s; position: relative; font-size: 15px;}
+        .navbar .nav-links a:hover, .navbar .nav-links a.active { color: var(--primary); }
+        .navbar .nav-links a.active::after { content: ''; position: absolute; bottom: -8px; left: 0; width: 100%; height: 3px; background: var(--primary); border-radius: 3px; }
+        .badge { background: linear-gradient(135deg, var(--secondary) 0%, #f43f5e 100%); color: white; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; position: absolute; top: -10px; right: -20px; box-shadow: 0 2px 5px rgba(236, 72, 153, 0.4);}
 
         /* Content */
-        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .container { max-width: 1200px; margin: 50px auto; padding: 0 20px; }
+        .h2-title { font-size: 32px; font-weight: 700; margin-bottom: 30px; color: var(--text-main); }
         
         /* Products Grid */
-        .h2-title { border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; color: #333; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .product-card { background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); text-align: center; transition: transform 0.2s; }
-        .product-card:hover { transform: translateY(-5px); }
-        .product-card h3 { margin: 10px 0; font-size: 20px; color: #222; }
-        .product-card .price { color: #28a745; font-size: 22px; font-weight: bold; margin-bottom: 20px; }
-        .product-card button { background: #007bff; color: #fff; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 15px; transition: background 0.3s;}
-        .product-card button:hover { background: #0056b3; }
-
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 35px; }
+        .product-card { background: var(--surface); padding: 30px; border-radius: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); text-align: center; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.5);}
+        .product-card:hover { transform: translateY(-12px); box-shadow: 0 25px 30px -5px rgba(0,0,0,0.1); border-color: rgba(99, 102, 241, 0.1);}
+        .product-card .icon-wrapper { height: 140px; display: flex; align-items: center; justify-content: center; font-size: 70px; margin-bottom: 25px; background: linear-gradient(135deg, #f3f4f6 0%, #ffffff 100%); border-radius: 18px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);}
+        .product-card h3 { font-size: 20px; color: var(--text-main); margin-bottom: 12px; font-weight: 700;}
+        .product-card .price { color: var(--primary); font-size: 26px; font-weight: 800; margin-bottom: 25px; }
+        
         /* Cart */
-        table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #fdfdfd; font-weight: 600; color: #444; }
-        .badge { background: #dc3545; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; vertical-align: super; margin-left: 2px; }
+        .cart-wrapper { background: var(--surface); border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #f3f4f6;}
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 25px; text-align: left; border-bottom: 1px solid #f3f4f6; }
+        th { background: #f8fafc; font-weight: 600; color: var(--text-light); text-transform: uppercase; font-size: 14px; letter-spacing: 0.05em; }
+        td { font-weight: 500; font-size: 16px;}
+        .empty-cart { padding: 80px; text-align: center; color: var(--text-light); }
+        .empty-cart i { font-size: 60px; margin-bottom: 20px; display: block; opacity: 0.5;}
     </style>
 </head>
 <body>
 
+    <div id="toast-container"></div>
+
     <!-- Auth View -->
-    <div id="auth-view" class="auth-container">
-        <h2 style="text-align: center; color: #333;">Customer Login</h2>
-        <div id="auth-msg" style="color: red; text-align: center; margin-bottom: 10px;"></div>
-        <input type="text" id="username" placeholder="Username" value="user">
-        <input type="password" id="password" placeholder="Password" value="pass">
-        <button onclick="login()">Đăng nhập</button>
-        <button class="sec" onclick="register()">Đăng ký tài khoản</button>
+    <div id="auth-view" class="auth-wrapper">
+        <div class="auth-container">
+            <h2>Welcome Back</h2>
+            <div id="auth-msg" style="text-align: center; margin-bottom: 20px; font-weight: 500;"></div>
+            <div class="input-group">
+                <input type="text" id="username" placeholder="Username" value="user">
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" placeholder="Password" value="pass">
+            </div>
+            <button class="btn" onclick="login()">Đăng Nhập</button>
+            <button class="btn sec" onclick="register()">Đăng Ký Tài Khoản</button>
+        </div>
     </div>
 
     <!-- Dashboard View -->
@@ -56,10 +97,10 @@
         
         <!-- Navbar -->
         <div class="navbar">
-            <div class="brand" onclick="switchTab('home')">🛍️ ShopSystem</div>
+            <div class="brand" onclick="switchTab('home')">TrendyShop</div>
             <div class="nav-links">
-                <a id="nav-home" class="active" onclick="switchTab('home')">Sản phẩm</a>
-                <a id="nav-cart" onclick="switchTab('cart')">Giỏ hàng <span id="cart-badge" class="badge">0</span></a>
+                <a id="nav-home" class="active" onclick="switchTab('home')">Khám Phá</a>
+                <a id="nav-cart" onclick="switchTab('cart')">Giỏ Hàng <span id="cart-badge" class="badge">0</span></a>
                 <a onclick="logout()">Thoát</a>
             </div>
         </div>
@@ -69,32 +110,51 @@
             
             <!-- Home (Products) -->
             <div id="tab-home">
-                <h2 class="h2-title">💻 Laptops</h2>
+                <h2 class="h2-title">✨ Laptops Nổi Bật</h2>
                 <div class="grid" id="laptop-grid"></div>
 
-                <h2 class="h2-title" style="margin-top: 50px;">👕 Quần Áo</h2>
+                <h2 class="h2-title" style="margin-top: 60px;">💫 Bộ Sưu Tập Áo Quần</h2>
                 <div class="grid" id="clothes-grid"></div>
             </div>
 
             <!-- Cart View -->
             <div id="tab-cart" class="hidden">
-                <h2 class="h2-title">🛒 Giỏ hàng của bạn</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Sản phẩm</th>
-                            <th>Mã tham chiếu (ID)</th>
-                            <th>Số lượng</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cart-tbody"></tbody>
-                </table>
+                <h2 class="h2-title">🛍️ Giỏ Hàng Của Bạn</h2>
+                <div class="cart-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Sản phẩm tham chiếu</th>
+                                <th>Số lượng</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cart-tbody"></tbody>
+                    </table>
+                </div>
             </div>
 
         </div>
     </div>
 
     <script>
+        function showToast(msg, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icon = type === 'success' ? '🎉' : '⚠️';
+            toast.innerHTML = `<span style="font-size: 20px;">${icon}</span> <span>${msg}</span>`;
+            container.appendChild(toast);
+            
+            requestAnimationFrame(() => {
+                setTimeout(() => toast.classList.add('show'), 10);
+            });
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
         window.onload = () => {
             const token = localStorage.getItem('cust_token');
             if (token) {
@@ -112,11 +172,12 @@
             });
             const data = await res.json();
             if(res.ok) {
-                document.getElementById('auth-msg').style.color = 'green';
-                document.getElementById('auth-msg').innerText = "Đăng ký thành công! Vui lòng ấn Đăng nhập.";
+                document.getElementById('auth-msg').style.color = 'var(--success)';
+                document.getElementById('auth-msg').innerText = "Đăng ký thành công! Vui lòng Đăng nhập.";
             } else {
-                document.getElementById('auth-msg').style.color = 'red';
+                document.getElementById('auth-msg').style.color = 'var(--danger)';
                 document.getElementById('auth-msg').innerText = data.error || "Lỗi đăng ký";
+                showToast(data.error || "Lỗi đăng ký", "error");
             }
         }
 
@@ -134,9 +195,11 @@
                 localStorage.setItem('cust_id', data.customer_id);
                 document.getElementById('auth-msg').innerText = '';
                 showDashboard();
+                showToast("Đăng nhập thành công!");
             } else {
-                document.getElementById('auth-msg').style.color = 'red';
+                document.getElementById('auth-msg').style.color = 'var(--danger)';
                 document.getElementById('auth-msg').innerText = data.error || 'Đăng nhập thất bại';
+                showToast("Đăng nhập thất bại", "error");
             }
         }
 
@@ -171,7 +234,7 @@
 
         async function loadProducts() {
             try {
-                // Load Laptops
+                // Laptops
                 const lpRes = await fetch('/laptops');
                 const laptops = await lpRes.json();
                 let lpHTML = '';
@@ -179,15 +242,16 @@
                     laptops.forEach(l => {
                         lpHTML += `
                         <div class="product-card">
+                            <div class="icon-wrapper">💻</div>
                             <h3>${l.name}</h3>
                             <div class="price">$${l.price}</div>
-                            <button onclick="addToCart('Laptop', ${l.id})">Thêm vào giỏ</button>
+                            <button class="btn" onclick="addToCart(${l.id}, '${l.name}')">Thêm vào giỏ</button>
                         </div>`;
                     });
                 }
-                document.getElementById('laptop-grid').innerHTML = lpHTML || '<p style="grid-column: 1 / -1; color: #888;">Chưa có sản phẩm Laptop nào</p>';
+                document.getElementById('laptop-grid').innerHTML = lpHTML || '<p style="grid-column: 1 / -1; color: var(--text-light);">Chưa có sản phẩm Laptop nào</p>';
 
-                // Load Clothes
+                // Clothes
                 const clRes = await fetch('/clothes');
                 const clothes = await clRes.json();
                 let clHTML = '';
@@ -195,34 +259,35 @@
                     clothes.forEach(c => {
                         clHTML += `
                         <div class="product-card">
+                            <div class="icon-wrapper">👕</div>
                             <h3>${c.name}</h3>
                             <div class="price">$${c.price}</div>
-                            <button onclick="addToCart('Clothes', ${c.id})">Thêm vào giỏ</button>
+                            <button class="btn" onclick="addToCart(${c.id}, '${c.name}')">Thêm vào giỏ</button>
                         </div>`;
                     });
                 }
-                document.getElementById('clothes-grid').innerHTML = clHTML || '<p style="grid-column: 1 / -1; color: #888;">Chưa có sản phẩm Quần áo nào</p>';
+                document.getElementById('clothes-grid').innerHTML = clHTML || '<p style="grid-column: 1 / -1; color: var(--text-light);">Chưa có sản phẩm Quần áo nào</p>';
             } catch (e) {
                 console.error(e);
             }
         }
 
-        async function addToCart(type, pid) {
+        async function addToCart(pid, name) {
             const custId = localStorage.getItem('cust_id');
-            // Mocking a unique ID to send to the cart 
-            // Realistically we'd store type too but we can just use the PID
             const res = await fetch('/cart/add', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ customer_id: parseInt(custId), product_id: pid, qty: 1 })
             });
             if(res.ok) {
-                // Animate badge simply
-                document.getElementById('cart-badge').style.transform = 'scale(1.5)';
-                setTimeout(() => document.getElementById('cart-badge').style.transform = 'scale(1)', 200);
+                showToast(`Đã thêm <b>${name}</b> vào giỏ!`);
+                // Animate badge
+                const badge = document.getElementById('cart-badge');
+                badge.style.transform = 'scale(1.5)';
+                setTimeout(() => badge.style.transform = 'scale(1)', 300);
                 updateCartBadge();
             } else {
-                alert("Lỗi khi thêm vào giỏ");
+                showToast("Lỗi khi thêm vào giỏ", "error");
             }
         }
 
@@ -237,14 +302,13 @@
                 if (data.items && data.items.length > 0) {
                     data.items.forEach(i => {
                         html += `<tr>
-                                    <td><strong>Sản phẩm </strong></td>
-                                    <td>Mã số #${i.product_id}</td>
-                                    <td><span style="font-weight: 500; font-size: 16px;">${i.qty}</span></td>
+                                    <td>Sản phẩm mã số <b>#${i.product_id}</b></td>
+                                    <td><span style="font-weight: 700; color: var(--primary); font-size: 18px;">${i.qty}</span></td>
                                  </tr>`;
                         totalItems += i.qty;
                     });
                 } else {
-                    html = '<tr><td colspan="3" style="text-align:center; padding: 30px; color: #888;">Giỏ hàng của bạn đang trống 📭</td></tr>';
+                    html = '<tr><td colspan="2" class="empty-cart"><i>📭</i><p>Giỏ hàng của bạn đang trống</p></td></tr>';
                 }
                 document.getElementById('cart-tbody').innerHTML = html;
                 document.getElementById('cart-badge').innerText = totalItems;

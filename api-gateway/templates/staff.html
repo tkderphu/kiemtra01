@@ -2,109 +2,196 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Staff Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Control Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background: #f9f9f9; }
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --sidebar-bg: #0f172a;
+            --sidebar-hover: #1e293b;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #334155;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text-main); }
         .hidden { display: none !important; }
-        
-        /* Login Form */
-        #login-view { max-width: 400px; margin: 100px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px;}
-        button:hover { background: #0056b3; }
-        
+
+        /* Toast Notification */
+        #toast-container { position: fixed; top: 30px; right: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 15px; pointer-events: none;}
+        .toast { background: var(--surface); color: var(--text-main); padding: 16px 24px; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px; transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); border-left: 4px solid var(--primary); font-weight: 500;}
+        .toast.show { transform: translateX(0); }
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--danger); }
+
+        /* Auth View */
+        .auth-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--sidebar-bg); padding: 20px;}
+        .auth-container { width: 100%; max-width: 400px; background: var(--surface); padding: 40px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        .auth-container h2 { text-align: center; color: #0f172a; margin-bottom: 30px; font-weight: 700; font-size: 28px;}
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: var(--text-main); }
+        .input-group input { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 15px; transition: all 0.2s; outline: none; background: #fff;}
+        .input-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);}
+        .btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; font-family: 'Inter', sans-serif; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5);}
+        .btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+
         /* Dashboard Layout */
-        #dashboard-view { display: flex; height: 100vh; }
+        #dashboard-view { display: flex; height: 100vh; overflow: hidden;}
         
         /* Sidebar */
-        .sidebar { width: 250px; background: #2c3e50; color: #fff; display: flex; flex-direction: column; }
-        .sidebar h2 { text-align: center; padding: 20px 0; margin: 0; border-bottom: 1px solid #1a252f; }
-        .sidebar a { padding: 15px 20px; color: #ecf0f1; text-decoration: none; border-bottom: 1px solid #1a252f; cursor: pointer; }
-        .sidebar a:hover, .sidebar a.active { background: #34495e; border-left: 4px solid #3498db; }
-        .logout-btn { margin-top: auto; background: #e74c3c; border-radius: 0; }
-        .logout-btn:hover { background: #c0392b; }
+        .sidebar { width: 280px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; box-shadow: 4px 0 10px rgba(0,0,0,0.1); z-index: 10;}
+        .sidebar h2 { padding: 30px 24px; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);}
+        .sidebar nav { padding: 20px 12px; display: flex; flex-direction: column; gap: 5px; flex: 1;}
+        .sidebar nav a { padding: 14px 16px; color: #cbd5e1; text-decoration: none; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 12px;}
+        .sidebar nav a:hover { background: var(--sidebar-hover); color: #fff;}
+        .sidebar nav a.active { background: var(--primary); color: #fff; font-weight: 600;}
+        .logout-btn { background: transparent; color: #f87171; border: none; padding: 20px; text-align: left; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; border-top: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;}
+        .logout-btn:hover { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
 
         /* Main Content */
-        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
-        .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px;}
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #f2f2f2; }
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; background: var(--bg); }
+        .header-title { font-size: 28px; font-weight: 700; color: #0f172a; margin-bottom: 30px;}
+        .card { background: var(--surface); padding: 30px; border-radius: 16px; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06); border: 1px solid var(--border); margin-bottom: 30px;}
         
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        /* Tables */
+        .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .table-header h3 { font-size: 18px; font-weight: 600; color: #0f172a; }
+        .refresh-btn { background: #f1f5f9; color: var(--text-main); padding: 8px 16px; font-size: 14px; border-radius: 6px; border: 1px solid var(--border); font-weight: 500; cursor: pointer; transition: all 0.2s;}
+        .refresh-btn:hover { background: #e2e8f0; }
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        th, td { padding: 16px 24px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background-color: #f8fafc; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-light); }
+        th:first-child { border-top-left-radius: 8px; }
+        th:last-child { border-top-right-radius: 8px; }
+        tbody tr { transition: background-color 0.2s; }
+        tbody tr:hover { background-color: #f8fafc; }
+        td { font-size: 15px; font-weight: 500; }
+        .badge-price { background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 14px;}
+
+        /* Form styling */
+        .form-container { max-width: 600px; }
+        .form-group { margin-bottom: 24px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text-main); }
+        .form-group select, .form-group input { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 15px; outline: none; transition: border-color 0.2s; background: #fff;}
+        .form-group select:focus, .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);}
     </style>
 </head>
 <body>
 
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
     <!-- Login View -->
-    <div id="login-view">
-        <h2 style="text-align: center;">Staff Login</h2>
-        <div id="login-error" style="color: red; text-align: center; margin-bottom: 10px;"></div>
-        <input type="text" id="username" placeholder="Username" value="admin">
-        <input type="password" id="password" placeholder="Password" value="admin">
-        <button onclick="login()">Login</button>
+    <div id="login-view" class="auth-wrapper">
+        <div class="auth-container">
+            <h2>Hệ thống Quản Trị</h2>
+            <div class="input-group">
+                <label>Tên đăng nhập</label>
+                <input type="text" id="username" placeholder="Nhập admin..." value="admin">
+            </div>
+            <div class="input-group">
+                <label>Mật khẩu</label>
+                <input type="password" id="password" placeholder="••••••••" value="admin">
+            </div>
+            <button class="btn" onclick="login()">Đăng Nhập</button>
+        </div>
     </div>
 
     <!-- Dashboard View -->
     <div id="dashboard-view" class="hidden">
         <!-- Sidebar -->
         <div class="sidebar">
-            <h2>Staff Portal</h2>
-            <a id="nav-list" class="active" onclick="switchTab('list')">Danh sách sản phẩm</a>
-            <a id="nav-add" onclick="switchTab('add')">Thêm sản phẩm</a>
-            <button class="logout-btn" onclick="logout()">Đăng xuất</button>
+            <h2>⚙️ Staff Panel</h2>
+            <nav>
+                <a id="nav-list" class="active" onclick="switchTab('list')">📄 Danh Sách Sản Phẩm</a>
+                <a id="nav-add" onclick="switchTab('add')">➕ Thêm Sản Phẩm Mới</a>
+            </nav>
+            <button class="logout-btn" onclick="logout()">🚪 Đăng Xuất</button>
         </div>
 
         <!-- Main Content -->
         <div class="main-content">
             
             <!-- Product List Tab -->
-            <div id="tab-list" class="card">
-                <h2>Danh sách sản phẩm</h2>
-                <button style="width: auto; margin-bottom: 15px; background: #28a745;" onclick="loadProducts()">Làm mới</button>
+            <div id="tab-list">
+                <h1 class="header-title">Quản Lý Sản Phẩm</h1>
                 
-                <h3>Laptops</h3>
-                <table>
-                    <thead><tr><th>ID</th><th>Tên SP</th><th>Giá ($)</th></tr></thead>
-                    <tbody id="laptop-tbody"></tbody>
-                </table>
+                <div class="card">
+                    <div class="table-header">
+                        <h3>Kho Laptops 💻</h3>
+                        <button class="refresh-btn" onclick="loadProducts()">Làm mới dữ liệu</button>
+                    </div>
+                    <table>
+                        <thead><tr><th>Mã SP</th><th>Tên Dòng Máy</th><th>Giá Niêm Yết</th></tr></thead>
+                        <tbody id="laptop-tbody"></tbody>
+                    </table>
+                </div>
 
-                <h3 style="margin-top: 30px;">Clothes</h3>
-                <table>
-                    <thead><tr><th>ID</th><th>Tên SP</th><th>Giá ($)</th></tr></thead>
-                    <tbody id="clothes-tbody"></tbody>
-                </table>
+                <div class="card">
+                    <div class="table-header">
+                        <h3>Kho Quần Áo 👕</h3>
+                    </div>
+                    <table>
+                        <thead><tr><th>Mã SP</th><th>Tên Trang Phục</th><th>Giá Niêm Yết</th></tr></thead>
+                        <tbody id="clothes-tbody"></tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- Add Product Tab -->
-            <div id="tab-add" class="card hidden">
-                <h2>Thêm sản phẩm mới</h2>
-                <div id="add-success" style="color: green; margin-bottom: 10px;"></div>
-                <div class="form-group">
-                    <label>Loại sản phẩm</label>
-                    <select id="prod-type">
-                        <option value="laptops">Laptop</option>
-                        <option value="clothes">Clothes</option>
-                    </select>
+            <div id="tab-add" class="hidden">
+                <h1 class="header-title">Thêm Mới Sản Phẩm</h1>
+                
+                <div class="card form-container">
+                    <div class="form-group">
+                        <label>Phân loại danh mục</label>
+                        <select id="prod-type">
+                            <option value="laptops">Thiết bị Laptop</option>
+                            <option value="clothes">Thời trang (Quần áo)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tên sản phẩm</label>
+                        <input type="text" id="prod-name" placeholder="VD: MacBook Pro M3 Max...">
+                    </div>
+                    <div class="form-group">
+                        <label>Giá bán ($)</label>
+                        <input type="number" id="prod-price" placeholder="VD: 2500">
+                    </div>
+                    <button class="btn" style="width: auto; padding: 14px 30px; margin-top: 10px;" onclick="addProduct()">Xác nhận thêm</button>
                 </div>
-                <div class="form-group">
-                    <label>Tên sản phẩm</label>
-                    <input type="text" id="prod-name" placeholder="VD: MacBook Pro M2">
-                </div>
-                <div class="form-group">
-                    <label>Giá ($)</label>
-                    <input type="number" id="prod-price" placeholder="VD: 1500">
-                </div>
-                <button onclick="addProduct()">Thêm ngay</button>
             </div>
 
         </div>
     </div>
 
     <script>
-        // Check Auth on load
+        function showToast(msg, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icon = type === 'success' ? '✅' : '🔴';
+            toast.innerHTML = `<span style="font-size: 18px;">${icon}</span> <span>${msg}</span>`;
+            container.appendChild(toast);
+            
+            requestAnimationFrame(() => {
+                setTimeout(() => toast.classList.add('show'), 10);
+            });
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
         window.onload = () => {
             const token = localStorage.getItem('staff_token');
             if (token) {
@@ -124,13 +211,13 @@
                 const data = await res.json();
                 if (res.ok && data.token) {
                     localStorage.setItem('staff_token', data.token);
-                    document.getElementById('login-error').innerText = '';
+                    showToast("Đăng nhập cấp độ Staff thành công!");
                     showDashboard();
                 } else {
-                    document.getElementById('login-error').innerText = data.error || 'Đăng nhập thất bại';
+                    showToast(data.error || 'Sai thông tin đăng nhập', "error");
                 }
             } catch (e) {
-                document.getElementById('login-error').innerText = 'Lỗi kết nối';
+                showToast('Lỗi kết nối tới Server!', "error");
             }
         }
 
@@ -138,6 +225,8 @@
             localStorage.removeItem('staff_token');
             document.getElementById('dashboard-view').classList.add('hidden');
             document.getElementById('login-view').classList.remove('hidden');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
         }
 
         function showDashboard() {
@@ -147,16 +236,13 @@
         }
 
         function switchTab(tab) {
-            // Update nav active state
             document.getElementById('nav-list').classList.remove('active');
             document.getElementById('nav-add').classList.remove('active');
             document.getElementById('nav-' + tab).classList.add('active');
 
-            // Hide all tabs
             document.getElementById('tab-list').classList.add('hidden');
             document.getElementById('tab-add').classList.add('hidden');
 
-            // Show selected tab
             document.getElementById('tab-' + tab).classList.remove('hidden');
 
             if (tab === 'list') {
@@ -166,29 +252,38 @@
 
         async function loadProducts() {
             try {
-                // Load Laptops
+                // Laptops
                 const lpRes = await fetch('/laptops');
                 const laptops = await lpRes.json();
                 let lpHTML = '';
                 if(Array.isArray(laptops)) {
                     laptops.forEach(l => {
-                        lpHTML += `<tr><td>${l.id}</td><td>${l.name}</td><td>${l.price}</td></tr>`;
+                        lpHTML += `<tr>
+                            <td style="color: var(--text-light);">#${l.id}</td>
+                            <td style="font-weight: 600; color: #0f172a;">${l.name}</td>
+                            <td><span class="badge-price">$${l.price}</span></td>
+                        </tr>`;
                     });
                 }
-                document.getElementById('laptop-tbody').innerHTML = lpHTML;
+                document.getElementById('laptop-tbody').innerHTML = lpHTML || '<tr><td colspan="3" style="text-align:center;">Dữ liệu trống</td></tr>';
 
-                // Load Clothes
+                // Clothes
                 const clRes = await fetch('/clothes');
                 const clothes = await clRes.json();
                 let clHTML = '';
                 if(Array.isArray(clothes)) {
                     clothes.forEach(c => {
-                        clHTML += `<tr><td>${c.id}</td><td>${c.name}</td><td>${c.price}</td></tr>`;
+                        clHTML += `<tr>
+                            <td style="color: var(--text-light);">#${c.id}</td>
+                            <td style="font-weight: 600; color: #0f172a;">${c.name}</td>
+                            <td><span class="badge-price">$${c.price}</span></td>
+                        </tr>`;
                     });
                 }
-                document.getElementById('clothes-tbody').innerHTML = clHTML;
+                document.getElementById('clothes-tbody').innerHTML = clHTML || '<tr><td colspan="3" style="text-align:center;">Dữ liệu trống</td></tr>';
             } catch (e) {
-                console.error("Error loading products", e);
+                console.error("Lỗi:", e);
+                showToast("Lỗi khi tải dữ liệu sản phẩm!", "error");
             }
         }
 
@@ -198,7 +293,7 @@
             const price = document.getElementById('prod-price').value;
 
             if(!name || !price) {
-                alert("Vui lòng điền đủ tên và giá!");
+                showToast("Dữ liệu không hợp lệ! Nhập đủ Tên và Giá.", "error");
                 return;
             }
 
@@ -210,15 +305,14 @@
                 });
                 
                 if(res.ok) {
-                    document.getElementById('add-success').innerText = 'Thêm sản phẩm thành công!';
+                    showToast(`Đã thêm thành công: ${name}`);
                     document.getElementById('prod-name').value = '';
                     document.getElementById('prod-price').value = '';
-                    setTimeout(() => { document.getElementById('add-success').innerText = ''; }, 3000);
                 } else {
-                    alert("Lỗi khi thêm!");
+                    showToast("Lỗi từ server khi thêm dữ liệu!", "error");
                 }
             } catch (e) {
-                alert("Lỗi kết nối!");
+                showToast("Lỗi kết nối mạng!", "error");
             }
         }
     </script>
