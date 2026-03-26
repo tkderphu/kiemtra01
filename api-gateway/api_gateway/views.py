@@ -35,8 +35,10 @@ def proxy_request(request, path):
     }
     
     target_base = None
+    # Fix: Ensure precise matching logic so "staff-ui" doesn't falsely match "staff" prefix.
+    # By strictly matching full paths or paths starting with 'prefix/'
     for prefix, base in url_map.items():
-        if path.startswith(prefix) or path == prefix:
+        if path == prefix.strip('/') or path.startswith(prefix if prefix.endswith('/') else prefix + '/'):
             target_base = base
             break
             
