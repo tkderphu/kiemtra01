@@ -15,7 +15,12 @@ def clothes_count(request):
 def clothes_list_create(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        c = Clothes.objects.create(name=data.get('name', 'Unknown'), price=data.get('price', 0))
+        c = Clothes.objects.create(
+            name=data.get('name', 'Unknown'), 
+            brand=data.get('brand', 'Unknown'),
+            image_url=data.get('image_url', ''),
+            price=data.get('price', 0)
+        )
         return Response({'msg': 'Clothes created', 'id': c.id})
     clothes = [c.to_dict() for c in Clothes.objects.all()]
     return Response(clothes)
@@ -30,6 +35,8 @@ def clothes_detail(request, pk):
     if request.method == 'PUT':
         data = json.loads(request.body)
         c.name = data.get('name', c.name)
+        c.brand = data.get('brand', c.brand)
+        c.image_url = data.get('image_url', c.image_url)
         c.price = data.get('price', c.price)
         c.save()
         return Response({'msg': f'Clothes {pk} updated', 'clothes': c.to_dict()})

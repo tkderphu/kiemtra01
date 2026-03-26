@@ -15,7 +15,12 @@ def laptop_count(request):
 def laptop_list_create(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        laptop = Laptop.objects.create(name=data.get('name', 'Unknown'), price=data.get('price', 0))
+        laptop = Laptop.objects.create(
+            name=data.get('name', 'Unknown'), 
+            brand=data.get('brand', 'Unknown'),
+            image_url=data.get('image_url', ''),
+            price=data.get('price', 0)
+        )
         return Response({'msg': 'Laptop created', 'id': laptop.id})
     laptops = [l.to_dict() for l in Laptop.objects.all()]
     return Response(laptops)
@@ -30,6 +35,8 @@ def laptop_detail(request, pk):
     if request.method == 'PUT':
         data = json.loads(request.body)
         laptop.name = data.get('name', laptop.name)
+        laptop.brand = data.get('brand', laptop.brand)
+        laptop.image_url = data.get('image_url', laptop.image_url)
         laptop.price = data.get('price', laptop.price)
         laptop.save()
         return Response({'msg': f'Laptop {pk} updated', 'laptop': laptop.to_dict()})
