@@ -57,9 +57,20 @@
 
         /* Main Content */
         .main-content { flex: 1; padding: 40px; overflow-y: auto; background: var(--bg); }
-        .header-title { font-size: 28px; font-weight: 700; color: #0f172a; margin-bottom: 30px;}
+        .header-title { font-size: 28px; font-weight: 700; color: #0f172a; margin-bottom: 8px;}
+        .header-subtitle { color: var(--text-light); font-size: 14px; margin-bottom: 30px; }
         .card { background: var(--surface); padding: 30px; border-radius: 16px; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06); border: 1px solid var(--border); margin-bottom: 30px;}
         
+        /* Dashboard KPI Cards */
+        .dashboard-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 30px;}
+        .dash-card { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid var(--border); display: flex; flex-direction: column; position: relative;}
+        .dash-title { color: var(--text-light); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+        .dash-value { font-size: 32px; font-weight: 700; color: #0f172a; }
+        .dash-icon { position: absolute; right: 25px; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .dash-icon.blue { background: #e0e7ff; color: #4338ca; }
+        .dash-icon.green { background: #dcfce7; color: #15803d; }
+        .dash-icon.purple { background: #f3e8ff; color: #7e22ce; }
+
         /* Tables */
         .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .table-header h3 { font-size: 18px; font-weight: 600; color: #0f172a; }
@@ -86,10 +97,8 @@
 </head>
 <body>
 
-    <!-- Toast Notification Container -->
     <div id="toast-container"></div>
 
-    <!-- Login View -->
     <div id="login-view" class="auth-wrapper">
         <div class="auth-container">
             <h2>Hệ thống Quản Trị</h2>
@@ -111,7 +120,8 @@
         <div class="sidebar">
             <h2>⚙️ Staff Panel</h2>
             <nav>
-                <a id="nav-list" class="active" onclick="switchTab('list')">📄 Danh Sách Sản Phẩm</a>
+                <a id="nav-overview" class="active" onclick="switchTab('overview')">📊 Tổng Quan</a>
+                <a id="nav-list" onclick="switchTab('list')">📄 Danh Sách Sản Phẩm</a>
                 <a id="nav-add" onclick="switchTab('add')">➕ Thêm Sản Phẩm Mới</a>
             </nav>
             <button class="logout-btn" onclick="logout()">🚪 Đăng Xuất</button>
@@ -119,10 +129,35 @@
 
         <!-- Main Content -->
         <div class="main-content">
+
+            <!-- Overview (Dashboard) Tab -->
+            <div id="tab-overview">
+                <h1 class="header-title">Tổng quan hệ thống</h1>
+                <p class="header-subtitle">Thống kê số lượng sản phẩm hiện tại trong kho</p>
+                
+                <div class="dashboard-cards">
+                    <div class="dash-card">
+                       <div class="dash-title">TỔNG SẢN PHẨM HIỆN CÓ (TẤT CẢ)</div>
+                       <div class="dash-value" id="count-all">0</div>
+                       <div class="dash-icon blue">📦</div>
+                    </div>
+                    <div class="dash-card">
+                       <div class="dash-title">TỔNG SẢN PHẨM QUẦN ÁO</div>
+                       <div class="dash-value" id="count-clothes">0</div>
+                       <div class="dash-icon green">👕</div>
+                    </div>
+                    <div class="dash-card">
+                       <div class="dash-title">TỔNG SẢN PHẨM LAPTOP</div>
+                       <div class="dash-value" id="count-laptop">0</div>
+                       <div class="dash-icon purple">💻</div>
+                    </div>
+                </div>
+            </div>
             
             <!-- Product List Tab -->
-            <div id="tab-list">
+            <div id="tab-list" class="hidden">
                 <h1 class="header-title">Quản Lý Sản Phẩm</h1>
+                <p class="header-subtitle">Danh mục các mặt hàng trong hệ thống</p>
                 
                 <div class="card">
                     <div class="table-header">
@@ -232,21 +267,46 @@
         function showDashboard() {
             document.getElementById('login-view').classList.add('hidden');
             document.getElementById('dashboard-view').classList.remove('hidden');
-            switchTab('list');
+            switchTab('overview');
         }
 
         function switchTab(tab) {
+            document.getElementById('nav-overview').classList.remove('active');
             document.getElementById('nav-list').classList.remove('active');
             document.getElementById('nav-add').classList.remove('active');
             document.getElementById('nav-' + tab).classList.add('active');
 
+            document.getElementById('tab-overview').classList.add('hidden');
             document.getElementById('tab-list').classList.add('hidden');
             document.getElementById('tab-add').classList.add('hidden');
 
             document.getElementById('tab-' + tab).classList.remove('hidden');
 
+            if (tab === 'overview') {
+                loadDashboardStats();
+            }
             if (tab === 'list') {
                 loadProducts();
+            }
+        }
+
+        async function loadDashboardStats() {
+            try {
+                const lpRes = await fetch('/laptops/count');
+                const lpData = await lpRes.json();
+                
+                const clRes = await fetch('/clothes/count');
+                const clData = await clRes.json();
+                
+                const cLp = lpData.count || 0;
+                const cCl = clData.count || 0;
+                
+                document.getElementById('count-all').innerText = cLp + cCl;
+                document.getElementById('count-clothes').innerText = cCl;
+                document.getElementById('count-laptop').innerText = cLp;
+            } catch (e) {
+                console.error("Lỗi:", e);
+                showToast("Không thể tải số liệu thống kê!", "error");
             }
         }
 

@@ -7,6 +7,10 @@ from .models import Clothes
 def health_check(request):
     return JsonResponse({'status': 'clothes service ok'})
 
+@api_view(['GET'])
+def clothes_count(request):
+    return Response({'count': Clothes.objects.count()})
+
 @api_view(['GET', 'POST'])
 def clothes_list_create(request):
     if request.method == 'POST':

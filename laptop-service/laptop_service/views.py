@@ -7,6 +7,10 @@ from .models import Laptop
 def health_check(request):
     return JsonResponse({'status': 'laptop service ok'})
 
+@api_view(['GET'])
+def laptop_count(request):
+    return Response({'count': Laptop.objects.count()})
+
 @api_view(['GET', 'POST'])
 def laptop_list_create(request):
     if request.method == 'POST':
