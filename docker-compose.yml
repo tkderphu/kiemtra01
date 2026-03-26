@@ -1,0 +1,142 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # DATABASES
+  # ==========================================
+  mysql-staff:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: staff_db
+    ports:
+      - "3306:3306"
+
+  mysql-customer:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: customer_db
+    ports:
+      - "3307:3306"
+
+  postgres-cart:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: cart_db
+    ports:
+      - "5432:5432"
+
+  postgres-laptop:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: laptop_db
+    ports:
+      - "5433:5432"
+
+  postgres-clothes:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: clothes_db
+    ports:
+      - "5434:5432"
+
+  # ==========================================
+  # MICROSERVICES
+  # ==========================================
+  staff-service:
+    build: 
+      context: ./staff-service
+    ports:
+      - "8001:8000"
+    depends_on:
+      - mysql-staff
+    environment:
+      - DB_HOST=mysql-staff
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+      - DB_NAME=staff_db
+
+  customer-service:
+    build: 
+      context: ./customer-service
+    ports:
+      - "8002:8000"
+    depends_on:
+      - mysql-customer
+    environment:
+      - DB_HOST=mysql-customer
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+      - DB_NAME=customer_db
+
+  cart-service:
+    build: 
+      context: ./cart-service
+    ports:
+      - "8003:8000"
+    depends_on:
+      - postgres-cart
+    environment:
+      - DB_HOST=postgres-cart
+      - DB_PORT=5432
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+      - DB_NAME=cart_db
+
+  laptop-service:
+    build: 
+      context: ./laptop-service
+    ports:
+      - "8004:8000"
+    depends_on:
+      - postgres-laptop
+    environment:
+      - DB_HOST=postgres-laptop
+      - DB_PORT=5432
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+      - DB_NAME=laptop_db
+
+  clothes-service:
+    build: 
+      context: ./clothes-service
+    ports:
+      - "8005:8000"
+    depends_on:
+      - postgres-clothes
+    environment:
+      - DB_HOST=postgres-clothes
+      - DB_PORT=5432
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+      - DB_NAME=clothes_db
+
+  # ==========================================
+  # API GATEWAY
+  # ==========================================
+  api-gateway:
+    build: 
+      context: ./api-gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      - staff-service
+      - customer-service
+      - cart-service
+      - laptop-service
+      - clothes-service
+    environment:
+      - STAFF_SERVICE_URL=http://staff-service:8000
+      - CUSTOMER_SERVICE_URL=http://customer-service:8000
+      - CART_SERVICE_URL=http://cart-service:8000
+      - LAPTOP_SERVICE_URL=http://laptop-service:8000
+      - CLOTHES_SERVICE_URL=http://clothes-service:8000

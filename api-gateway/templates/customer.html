@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Customer Shop</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f6f9; }
+        .hidden { display: none !important; }
+        
+        /* Auth View */
+        .auth-container { max-width: 400px; margin: 100px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .auth-container input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .auth-container button { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        .auth-container button.sec { background: #6c757d; }
+        
+        /* Navbar */
+        .navbar { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .navbar .brand { font-size: 24px; font-weight: bold; color: #28a745; cursor: pointer; }
+        .navbar .nav-links a { margin-left: 20px; text-decoration: none; color: #333; font-weight: 500; cursor: pointer; transition: color 0.3s; padding-bottom: 5px; }
+        .navbar .nav-links a:hover, .navbar .nav-links a.active { color: #28a745; border-bottom: 2px solid #28a745; }
+
+        /* Content */
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        
+        /* Products Grid */
+        .h2-title { border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; color: #333; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .product-card { background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); text-align: center; transition: transform 0.2s; }
+        .product-card:hover { transform: translateY(-5px); }
+        .product-card h3 { margin: 10px 0; font-size: 20px; color: #222; }
+        .product-card .price { color: #28a745; font-size: 22px; font-weight: bold; margin-bottom: 20px; }
+        .product-card button { background: #007bff; color: #fff; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 15px; transition: background 0.3s;}
+        .product-card button:hover { background: #0056b3; }
+
+        /* Cart */
+        table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #fdfdfd; font-weight: 600; color: #444; }
+        .badge { background: #dc3545; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; vertical-align: super; margin-left: 2px; }
+    </style>
+</head>
+<body>
+
+    <!-- Auth View -->
+    <div id="auth-view" class="auth-container">
+        <h2 style="text-align: center; color: #333;">Customer Login</h2>
+        <div id="auth-msg" style="color: red; text-align: center; margin-bottom: 10px;"></div>
+        <input type="text" id="username" placeholder="Username" value="user">
+        <input type="password" id="password" placeholder="Password" value="pass">
+        <button onclick="login()">Đăng nhập</button>
+        <button class="sec" onclick="register()">Đăng ký tài khoản</button>
+    </div>
+
+    <!-- Dashboard View -->
+    <div id="dashboard-view" class="hidden">
+        
+        <!-- Navbar -->
+        <div class="navbar">
+            <div class="brand" onclick="switchTab('home')">🛍️ ShopSystem</div>
+            <div class="nav-links">
+                <a id="nav-home" class="active" onclick="switchTab('home')">Sản phẩm</a>
+                <a id="nav-cart" onclick="switchTab('cart')">Giỏ hàng <span id="cart-badge" class="badge">0</span></a>
+                <a onclick="logout()">Thoát</a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="container">
+            
+            <!-- Home (Products) -->
+            <div id="tab-home">
+                <h2 class="h2-title">💻 Laptops</h2>
+                <div class="grid" id="laptop-grid"></div>
+
+                <h2 class="h2-title" style="margin-top: 50px;">👕 Quần Áo</h2>
+                <div class="grid" id="clothes-grid"></div>
+            </div>
+
+            <!-- Cart View -->
+            <div id="tab-cart" class="hidden">
+                <h2 class="h2-title">🛒 Giỏ hàng của bạn</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th>Mã tham chiếu (ID)</th>
+                            <th>Số lượng</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cart-tbody"></tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        window.onload = () => {
+            const token = localStorage.getItem('cust_token');
+            if (token) {
+                showDashboard();
+            }
+        };
+
+        async function register() {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            const res = await fetch('/customer/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: u, password: p })
+            });
+            const data = await res.json();
+            if(res.ok) {
+                document.getElementById('auth-msg').style.color = 'green';
+                document.getElementById('auth-msg').innerText = "Đăng ký thành công! Vui lòng ấn Đăng nhập.";
+            } else {
+                document.getElementById('auth-msg').style.color = 'red';
+                document.getElementById('auth-msg').innerText = data.error || "Lỗi đăng ký";
+            }
+        }
+
+        async function login() {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            const res = await fetch('/customer/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: u, password: p })
+            });
+            const data = await res.json();
+            if (res.ok && data.token) {
+                localStorage.setItem('cust_token', data.token);
+                localStorage.setItem('cust_id', data.customer_id);
+                document.getElementById('auth-msg').innerText = '';
+                showDashboard();
+            } else {
+                document.getElementById('auth-msg').style.color = 'red';
+                document.getElementById('auth-msg').innerText = data.error || 'Đăng nhập thất bại';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('cust_token');
+            localStorage.removeItem('cust_id');
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('auth-view').classList.remove('hidden');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        function showDashboard() {
+            document.getElementById('auth-view').classList.add('hidden');
+            document.getElementById('dashboard-view').classList.remove('hidden');
+            switchTab('home');
+            updateCartBadge();
+        }
+
+        function switchTab(tab) {
+            document.getElementById('nav-home').classList.remove('active');
+            document.getElementById('nav-cart').classList.remove('active');
+            document.getElementById('nav-' + tab).classList.add('active');
+
+            document.getElementById('tab-home').classList.add('hidden');
+            document.getElementById('tab-cart').classList.add('hidden');
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+
+            if (tab === 'home') loadProducts();
+            if (tab === 'cart') loadCart();
+        }
+
+        async function loadProducts() {
+            try {
+                // Load Laptops
+                const lpRes = await fetch('/laptops');
+                const laptops = await lpRes.json();
+                let lpHTML = '';
+                if(Array.isArray(laptops)) {
+                    laptops.forEach(l => {
+                        lpHTML += `
+                        <div class="product-card">
+                            <h3>${l.name}</h3>
+                            <div class="price">$${l.price}</div>
+                            <button onclick="addToCart('Laptop', ${l.id})">Thêm vào giỏ</button>
+                        </div>`;
+                    });
+                }
+                document.getElementById('laptop-grid').innerHTML = lpHTML || '<p style="grid-column: 1 / -1; color: #888;">Chưa có sản phẩm Laptop nào</p>';
+
+                // Load Clothes
+                const clRes = await fetch('/clothes');
+                const clothes = await clRes.json();
+                let clHTML = '';
+                if(Array.isArray(clothes)) {
+                    clothes.forEach(c => {
+                        clHTML += `
+                        <div class="product-card">
+                            <h3>${c.name}</h3>
+                            <div class="price">$${c.price}</div>
+                            <button onclick="addToCart('Clothes', ${c.id})">Thêm vào giỏ</button>
+                        </div>`;
+                    });
+                }
+                document.getElementById('clothes-grid').innerHTML = clHTML || '<p style="grid-column: 1 / -1; color: #888;">Chưa có sản phẩm Quần áo nào</p>';
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function addToCart(type, pid) {
+            const custId = localStorage.getItem('cust_id');
+            // Mocking a unique ID to send to the cart 
+            // Realistically we'd store type too but we can just use the PID
+            const res = await fetch('/cart/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customer_id: parseInt(custId), product_id: pid, qty: 1 })
+            });
+            if(res.ok) {
+                // Animate badge simply
+                document.getElementById('cart-badge').style.transform = 'scale(1.5)';
+                setTimeout(() => document.getElementById('cart-badge').style.transform = 'scale(1)', 200);
+                updateCartBadge();
+            } else {
+                alert("Lỗi khi thêm vào giỏ");
+            }
+        }
+
+        async function loadCart() {
+            const custId = localStorage.getItem('cust_id');
+            try {
+                const res = await fetch(`/cart/${custId}`);
+                const data = await res.json();
+                let html = '';
+                let totalItems = 0;
+                
+                if (data.items && data.items.length > 0) {
+                    data.items.forEach(i => {
+                        html += `<tr>
+                                    <td><strong>Sản phẩm </strong></td>
+                                    <td>Mã số #${i.product_id}</td>
+                                    <td><span style="font-weight: 500; font-size: 16px;">${i.qty}</span></td>
+                                 </tr>`;
+                        totalItems += i.qty;
+                    });
+                } else {
+                    html = '<tr><td colspan="3" style="text-align:center; padding: 30px; color: #888;">Giỏ hàng của bạn đang trống 📭</td></tr>';
+                }
+                document.getElementById('cart-tbody').innerHTML = html;
+                document.getElementById('cart-badge').innerText = totalItems;
+            } catch (e) {
+                console.error("Cart error:", e);
+            }
+        }
+
+        async function updateCartBadge() {
+            const custId = localStorage.getItem('cust_id');
+            try {
+                const res = await fetch(`/cart/${custId}`);
+                const data = await res.json();
+                let totalItems = 0;
+                if (data.items) {
+                    data.items.forEach(i => { totalItems += i.qty; });
+                }
+                document.getElementById('cart-badge').innerText = totalItems;
+            } catch (e) {}
+        }
+    </script>
+</body>
+</html>
