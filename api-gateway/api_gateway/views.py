@@ -9,6 +9,12 @@ CUSTOMER_URL = os.environ.get('CUSTOMER_SERVICE_URL', 'http://customer-service:8
 CART_URL = os.environ.get('CART_SERVICE_URL', 'http://cart-service:8000')
 LAPTOP_URL = os.environ.get('LAPTOP_SERVICE_URL', 'http://laptop-service:8000')
 CLOTHES_URL = os.environ.get('CLOTHES_SERVICE_URL', 'http://clothes-service:8000')
+ORDER_URL = os.environ.get('ORDER_SERVICE_URL', 'http://order-service:8000')
+PAYMENT_URL = os.environ.get('PAYMENT_SERVICE_URL', 'http://payment-service:8000')
+SHIPPING_URL = os.environ.get('SHIPPING_SERVICE_URL', 'http://shipping-service:8000')
+COMMENT_URL = os.environ.get('COMMENT_SERVICE_URL', 'http://comment-rate-service:8000')
+TRACK_URL = os.environ.get('TRACKING_SERVICE_URL', 'http://tracking-service:8000')
+RECOMMEND_URL = os.environ.get('RECOMMEND_SERVICE_URL', 'http://recommendation-service:8000')
 
 def health_check(request):
     return JsonResponse({'status': 'gateway ok'})
@@ -27,11 +33,23 @@ def proxy_request(request, path):
         'cart/': CART_URL,
         'laptops/': LAPTOP_URL,
         'clothes/': CLOTHES_URL,
+        'orders/': ORDER_URL,
+        'payments/': PAYMENT_URL,
+        'shipments/': SHIPPING_URL,
+        'comments/': COMMENT_URL,
+        'track/': TRACK_URL,
+        'recommend/': RECOMMEND_URL,
         'staff': STAFF_URL,
         'customer': CUSTOMER_URL,
         'cart': CART_URL,
         'laptops': LAPTOP_URL,
         'clothes': CLOTHES_URL,
+        'orders': ORDER_URL,
+        'payments': PAYMENT_URL,
+        'shipments': SHIPPING_URL,
+        'comments': COMMENT_URL,
+        'track': TRACK_URL,
+        'recommend': RECOMMEND_URL,
     }
     
     target_base = None

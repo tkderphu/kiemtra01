@@ -74,7 +74,7 @@
         @media (max-width: 768px) { .grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 480px) { .grid { grid-template-columns: repeat(2, 1fr); } }
 
-        .product-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; text-align: left; transition: all 0.2s; position: relative; display: flex; flex-direction: column; text-decoration: none;}
+        .product-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; text-align: left; transition: all 0.2s; position: relative; display: flex; flex-direction: column; text-decoration: none; cursor: pointer;}
         .product-card:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(139, 61, 255, 0.15); transform: translateY(-3px); z-index: 2;}
         .product-card .img-container { height: 160px; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; overflow: hidden; }
         .product-card img { max-width: 100%; max-height: 100%; object-fit: contain; }
@@ -98,6 +98,29 @@
         .empty-state { text-align: center; padding: 60px 20px; color: var(--text-light); }
         .empty-state i { font-size: 48px; margin-bottom: 15px; display: block; opacity: 0.5;}
         .empty-state p { font-size: 15px;}
+
+        /* Detail Modal */
+        .modal { position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s; pointer-events: none;}
+        .modal.show { opacity: 1; pointer-events: auto; }
+        .modal-content { background-color: #fefefe; padding: 30px; border-radius: 12px; width: 90%; max-width: 900px; position: relative; max-height: 90vh; overflow-y: auto;}
+        .close { color: #aaa; position: absolute; right: 25px; top: 15px; font-size: 28px; font-weight: bold; cursor: pointer; transition: color 0.2s;}
+        .close:hover { color: var(--primary); }
+        .modal-body { display: flex; gap: 30px; }
+        @media (max-width: 768px) { .modal-body { flex-direction: column; } }
+        .modal-img { flex: 1; text-align: center; background: #f9f9f9; border-radius: 8px; padding: 20px;}
+        .modal-img img { max-width: 100%; max-height: 400px; object-fit: contain; mix-blend-mode: multiply;}
+        .modal-info { flex: 1.5; }
+        .modal-title { font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 10px; line-height: 1.3;}
+        .modal-price { font-size: 28px; font-weight: 700; color: var(--primary); margin-bottom: 20px;}
+        
+        .comment-item { border-bottom: 1px solid #eee; padding: 15px 0; }
+        .comment-item:last-child { border-bottom: none; }
+        .comment-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .comment-user { font-weight: 600; font-size: 14px;}
+        .comment-date { color: var(--text-light); font-size: 12px;}
+        .stars { color: #facc15; font-size: 14px; margin-bottom: 5px;}
+        .comment-text { font-size: 14px; color: var(--text-main); }
+        .rating-summary { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; margin-bottom: 10px;}
     </style>
 </head>
 <body>
@@ -147,7 +170,7 @@
                         <span>Giỏ hàng</span>
                         <div id="cart-badge" class="badge">0</div>
                     </div>
-                    <div class="nav-item">
+                    <div class="nav-item" onclick="switchTab('orders')">
                         <i>📦</i>
                         <span>Tra cứu<br>đơn hàng</span>
                     </div>
@@ -164,13 +187,20 @@
             
             <!-- Home (Overview of Products) -->
             <div id="tab-home">
+                <!-- Recommendations Section -->
+                <div class="section-box hidden" id="recommendation-section" style="background: linear-gradient(to right, #fff0f5, #fff); border-left: 4px solid #ff3366;">
+                    <div class="section-header">
+                        <div class="section-title" style="color: #ff3366;">💖 Dành Riêng Cho Bạn</div>
+                    </div>
+                    <div class="grid" id="recommend-preview-grid"></div>
+                </div>
+
                 <!-- Laptops Section -->
                 <div class="section-box">
                     <div class="section-header">
                         <div class="section-title">Laptop Chính Hãng</div>
                         <a class="view-all" onclick="viewAll('laptop')">Xem tất cả ></a>
                     </div>
-                    <!-- Display only first 5 items -->
                     <div class="grid" id="laptop-preview-grid"></div>
                 </div>
 
@@ -192,10 +222,7 @@
                         <a class="view-all" onclick="switchTab('home')">< Quay lại Trang chủ</a>
                     </div>
                     
-                    <!-- Dynamic Filter Bar based on Brands -->
                     <div class="filter-bar" id="filter-bar"></div>
-                    
-                    <!-- Full Grid -->
                     <div class="grid" id="filter-grid"></div>
                 </div>
             </div>
@@ -211,16 +238,86 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Sản phẩm Tùy chọn</th>
+                                    <th>Sản phẩm Tham chiếu</th>
                                     <th>Số lượng</th>
                                 </tr>
                             </thead>
                             <tbody id="cart-tbody"></tbody>
                         </table>
+                        <div style="margin-top: 25px; text-align: right; border-top: 1px solid var(--border); padding-top: 20px;">
+                            <button class="btn" style="width: auto; padding: 12px 35px; font-size: 16px;" onclick="checkout()">Tiến hành Thanh Toán</button>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Orders View -->
+            <div id="tab-orders" class="hidden">
+                <div class="section-box">
+                    <div class="section-header">
+                        <div class="section-title">Lịch sử đơn hàng (SAGA Pattern)</div>
+                    </div>
+                    <div class="cart-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mã Đơn Hàng</th>
+                                    <th>Ngày Tạo</th>
+                                    <th>Tổng Tiền</th>
+                                    <th>Giao Dịch (Payment)</th>
+                                    <th>Trạng Thái Giao Hàng</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div id="product-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeProductDetail()">&times;</span>
+            <div class="modal-body">
+                <div class="modal-img">
+                    <img id="modal-img" src="" alt="Product">
+                </div>
+                <div class="modal-info">
+                    <div id="modal-brand" style="color: var(--text-light); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;"></div>
+                    <h2 id="modal-title" class="modal-title"></h2>
+                    <h3 id="modal-price" class="modal-price"></h3>
+                    <button class="btn" id="modal-add-cart" style="width: auto; padding: 12px 40px; border-radius: 8px;">🛒 Thêm vào giỏ</button>
+                    
+                    <hr style="margin: 30px 0; border: none; border-top: 1px dashed #ccc;">
+                    
+                    <h3 style="margin-bottom: 10px;">⭐ Đánh giá & Bình luận</h3>
+                    <div id="rating-summary" class="rating-summary">Chưa có đánh giá</div>
+                    <div id="comments-list" style="margin-top: 15px; max-height: 250px; overflow-y: auto; padding-right: 10px;"></div>
+                    
+                    <div id="comment-form-box" style="margin-top: 20px; background: #fff; padding: 20px; border-radius: 8px; border: 1px solid var(--border);">
+                        <h4 style="margin-bottom: 15px; color: var(--primary);">Viết đánh giá của bạn</h4>
+                        <div style="margin-bottom: 12px;">
+                            <label style="font-size: 14px; font-weight: 500;">Chất lượng sản phẩm:</label>
+                            <select id="comment-rating" style="padding: 6px 12px; margin-left: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+                                <option value="5">⭐⭐⭐⭐⭐ (Tuyệt vời)</option>
+                                <option value="4">⭐⭐⭐⭐ (Tốt)</option>
+                                <option value="3">⭐⭐⭐ (Khá)</option>
+                                <option value="2">⭐⭐ (Trung bình)</option>
+                                <option value="1">⭐ (Tệ)</option>
+                            </select>
+                        </div>
+                        <textarea id="comment-content" rows="3" style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #ccc; font-family: inherit; font-size: 14px; outline: none; resize: vertical;" placeholder="Hãy chia sẻ cảm nhận của bạn về sản phẩm này nhé..."></textarea>
+                        
+                        <input type="hidden" id="modal-current-id">
+                        <input type="hidden" id="modal-current-type">
+                        
+                        <button class="btn" style="width: auto; padding: 8px 24px; margin-top: 15px; background: #333;" onclick="submitComment()">Gửi Đánh Giá</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -255,6 +352,22 @@
                 showDashboard();
             }
         };
+
+        async function trackEvent(productId, action) {
+            const custId = localStorage.getItem('cust_id');
+            if(!custId) return;
+            try {
+                await fetch('/track', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: parseInt(custId),
+                        product_id: parseInt(productId),
+                        action: action
+                    })
+                });
+            } catch(e) { console.error("Tracking Error:", e); }
+        }
 
         async function register() {
             const u = document.getElementById('username').value;
@@ -318,11 +431,13 @@
             document.getElementById('tab-home').classList.add('hidden');
             document.getElementById('tab-filter').classList.add('hidden');
             document.getElementById('tab-cart').classList.add('hidden');
+            document.getElementById('tab-orders').classList.add('hidden');
 
             document.getElementById('tab-' + tab).classList.remove('hidden');
 
             if (tab === 'home') loadProducts();
             if (tab === 'cart') loadCart();
+            if (tab === 'orders') loadOrders();
         }
 
         // Fetching Data
@@ -331,16 +446,50 @@
                 // Laptops
                 const lpRes = await fetch('/laptops');
                 allLaptops = await lpRes.json();
-                renderPreviewGrid('laptop-preview-grid', allLaptops);
+                if(Array.isArray(allLaptops)) {
+                    allLaptops.forEach(l => l.type = 'laptops');
+                    renderPreviewGrid('laptop-preview-grid', allLaptops);
+                }
 
                 // Clothes
                 const clRes = await fetch('/clothes');
                 allClothes = await clRes.json();
-                renderPreviewGrid('clothes-preview-grid', allClothes);
+                if(Array.isArray(allClothes)) {
+                    allClothes.forEach(c => c.type = 'clothes');
+                    renderPreviewGrid('clothes-preview-grid', allClothes);
+                }
+
+                // Load Recommendations
+                loadRecommendations();
             } catch (e) {
                 console.error(e);
                 showToast("Lỗi khi tải sản phẩm", "error");
             }
+        }
+
+        async function loadRecommendations() {
+            const custId = localStorage.getItem('cust_id');
+            const section = document.getElementById('recommendation-section');
+            if(!custId) return;
+            try {
+                section.classList.add('hidden'); // Reset hidden state
+                const res = await fetch(`/recommend/${custId}`);
+                if(res.ok) {
+                    const data = await res.json();
+                    const recIds = data.recommended_product_ids || [];
+                    if(recIds.length > 0) {
+                        const recItems = [];
+                        recIds.forEach(id => {
+                            let item = allLaptops.find(x => x.id === id) || allClothes.find(x => x.id === id);
+                            if(item && recItems.length < 5) recItems.push(item);
+                        });
+                        if(recItems.length > 0) {
+                            renderPreviewGrid('recommend-preview-grid', recItems);
+                            section.classList.remove('hidden');
+                        }
+                    }
+                }
+            } catch(e) { console.error("Rec Error:", e); }
         }
 
         // Rendering Grids
@@ -348,40 +497,33 @@
             const img = item.image_url && item.image_url !== '' ? item.image_url : 'https://dummyimage.com/200x200/f5f5f5/999&text=No+Image';
             const brand = item.brand || 'Khác';
             const price = Number(item.price).toLocaleString('vi-VN');
-            
+            const type = item.type;
+            const escapedName = item.name ? item.name.replace(/'/g, "\\'") : '';
             return `
-            <div class="product-card">
-                <div class="img-container"><img src="${img}" alt="${item.name}"></div>
+            <div class="product-card" onclick="openProductDetail(${item.id}, '${type}')">
+                <div class="img-container"><img src="${img}" alt="${escapedName}"></div>
                 <div class="brand-label">${brand}</div>
-                <div class="name" title="${item.name}">${item.name}</div>
+                <div class="name" title="${escapedName}">${item.name}</div>
                 <div class="price">${price} ₫</div>
-                <button class="add-cart-btn" onclick="addToCart(${item.id}, '${item.name.replace(/'/g, "\\'")}', event)">Thêm vào giỏ</button>
+                <button class="add-cart-btn" onclick="addToCart(${item.id}, '${escapedName}', event)">Thêm vào giỏ</button>
             </div>`;
         }
 
         function renderPreviewGrid(elementId, items) {
             let html = '';
-            // Just show top 5 items for preview
             const previewItems = Array.isArray(items) ? items.slice(0, 5) : [];
             if(previewItems.length > 0) {
-                previewItems.forEach(item => {
-                    html += createCardHtml(item);
-                });
+                previewItems.forEach(item => { html += createCardHtml(item); });
             } else {
                 html = '<p style="color:#888; grid-column:1/-1;">Chưa có sản phẩm.</p>';
             }
             document.getElementById(elementId).innerHTML = html;
         }
 
-        // Filter Logic
         function viewAll(category) {
             currentFilterCategory = category;
             currentFilterBrand = 'all';
-            
-            document.getElementById('tab-home').classList.add('hidden');
-            document.getElementById('tab-cart').classList.add('hidden');
-            document.getElementById('tab-filter').classList.remove('hidden');
-            
+            switchTab('filter');
             renderFilterPage();
         }
 
@@ -406,14 +548,11 @@
             
             // Filter Data
             const filteredItems = currentFilterBrand === 'all' 
-                ? items 
-                : items.filter(i => (i.brand || 'Khác').trim() === currentFilterBrand);
+                ? items : items.filter(i => (i.brand || 'Khác').trim() === currentFilterBrand);
             
             let gridHtml = '';
             if(filteredItems.length > 0) {
-                filteredItems.forEach(item => {
-                    gridHtml += createCardHtml(item);
-                });
+                filteredItems.forEach(item => { gridHtml += createCardHtml(item); });
             } else {
                 gridHtml = '<div class="empty-state" style="grid-column:1/-1;"><p>Không tìm thấy sản phẩm phù hợp.</p></div>';
             }
@@ -425,9 +564,130 @@
             renderFilterPage();
         }
 
+        // Product Detail Modal & Comments Logic
+        function openProductDetail(id, type) {
+            let item = null;
+            if(type === 'laptops') {
+                item = allLaptops.find(x => x.id === id);
+            } else if (type === 'clothes') {
+                item = allClothes.find(x => x.id === id);
+            }
+            
+            if(!item) return;
+
+            const img = item.image_url && item.image_url !== '' ? item.image_url : 'https://dummyimage.com/400x400/f5f5f5/999&text=No+Image';
+            document.getElementById('modal-img').src = img;
+            document.getElementById('modal-title').innerText = item.name;
+            document.getElementById('modal-brand').innerText = item.brand || 'Khác';
+            document.getElementById('modal-price').innerText = Number(item.price).toLocaleString('vi-VN') + ' ₫';
+            
+            const escapedName = item.name.replace(/'/g, "\\'");
+            document.getElementById('modal-add-cart').setAttribute('onclick', `addToCart(${item.id}, '${escapedName}', event); closeProductDetail();`);
+
+            document.getElementById('modal-current-id').value = id;
+            document.getElementById('modal-current-type').value = type;
+            
+            trackEvent(id, 'VIEW');
+
+            document.getElementById('product-modal').classList.add('show');
+
+            loadComments(type, id); // Load comments via API Gateway
+        }
+
+        function closeProductDetail() {
+            document.getElementById('product-modal').classList.remove('show');
+            document.getElementById('comment-content').value = '';
+            document.getElementById('comment-rating').value = '5';
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('product-modal');
+            if (event.target == modal) {
+                closeProductDetail();
+            }
+        }
+
+        async function loadComments(type, id) {
+            const listDiv = document.getElementById('comments-list');
+            listDiv.innerHTML = '<p style="color:#888;">Đang tải bình luận...</p>';
+            try {
+                const res = await fetch(`/comments/${type}/${id}`);
+                if(res.ok) {
+                    const data = await res.json();
+                    let summaryHtml = '';
+                    if(data.total_comments > 0) {
+                        summaryHtml = `<span style="color:#facc15;">⭐ ${data.average_rating}/5</span> <span style="font-size:14px; color:#888; font-weight:normal;">(${data.total_comments} đánh giá)</span>`;
+                        let listHtml = '';
+                        data.comments.forEach(c => {
+                            let stars = '⭐'.repeat(c.rating);
+                            listHtml += `
+                                <div class="comment-item">
+                                    <div class="comment-header">
+                                        <div class="comment-user">Khách hàng #${c.user_id}</div>
+                                        <div class="comment-date">${new Date(c.created_at).toLocaleDateString('vi-VN')}</div>
+                                    </div>
+                                    <div class="stars">${stars}</div>
+                                    <div class="comment-text">${c.content}</div>
+                                </div>
+                            `;
+                        });
+                        listDiv.innerHTML = listHtml;
+                    } else {
+                        summaryHtml = 'Chưa có đánh giá nào';
+                        listDiv.innerHTML = '<p style="color:#888; font-style:italic;">Hãy là người đầu tiên đánh giá sản phẩm này!</p>';
+                    }
+                    document.getElementById('rating-summary').innerHTML = summaryHtml;
+                } else {
+                    listDiv.innerHTML = '<p style="color:var(--red);">Lỗi hệ thống hiển thị bình luận.</p>';
+                }
+            } catch(e) {
+                listDiv.innerHTML = '<p style="color:var(--red);">Không thể kết nối đến máy chủ bình luận.</p>';
+            }
+        }
+
+        async function submitComment() {
+            const custId = localStorage.getItem('cust_id');
+            const pId = document.getElementById('modal-current-id').value;
+            const pType = document.getElementById('modal-current-type').value;
+            const content = document.getElementById('comment-content').value.trim();
+            const rating = document.getElementById('comment-rating').value;
+
+            if(!content) {
+                showToast("Vui lòng nhập nội dung đánh giá!", "error");
+                return;
+            }
+
+            try {
+                const res = await fetch('/comments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: parseInt(custId),
+                        product_id: parseInt(pId),
+                        product_type: pType,
+                        content: content,
+                        rating: parseInt(rating)
+                    })
+                });
+
+                const data = await res.json();
+                if(res.ok) {
+                    showToast("Cảm ơn bạn đã đánh giá!");
+                    document.getElementById('comment-content').value = '';
+                    loadComments(pType, pId); // refresh list
+                } else {
+                    showToast(data.error || "Lỗi. Bạn cần mua sản phẩm này trước khi đánh giá.", "error");
+                }
+            } catch(e) {
+                showToast("Lỗi kết nối", "error");
+            }
+        }
+
+
         // Cart Logic
         async function addToCart(pid, name, event) {
-            if(event) event.stopPropagation(); // prevent card click
+            if(event) event.stopPropagation();
             const custId = localStorage.getItem('cust_id');
             const res = await fetch('/cart/add', {
                 method: 'POST',
@@ -435,8 +695,8 @@
                 body: JSON.stringify({ customer_id: parseInt(custId), product_id: pid, qty: 1 })
             });
             if(res.ok) {
+                trackEvent(pid, 'ADD_CART');
                 showToast(`Thêm ${name} vào giỏ thành công!`);
-                // Animate badge
                 const badge = document.getElementById('cart-badge');
                 badge.style.transform = 'scale(1.5)';
                 setTimeout(() => badge.style.transform = 'scale(1)', 300);
@@ -456,8 +716,13 @@
                 
                 if (data.items && data.items.length > 0) {
                     data.items.forEach(i => {
+                        let n = `Sản phẩm #${i.product_id}`;
+                        let l = allLaptops.find(x => x.id == i.product_id);
+                        if(!l) l = allClothes.find(x => x.id == i.product_id);
+                        if(l) n = l.name;
+                        
                         html += `<tr>
-                                    <td>Mã số tham chiếu (Sản phẩm #${i.product_id})</td>
+                                    <td>${n}</td>
                                     <td><span style="font-weight: 700; color: var(--primary); font-size: 16px;">${i.qty}</span></td>
                                  </tr>`;
                         totalItems += i.qty;
@@ -483,6 +748,106 @@
                 }
                 document.getElementById('cart-badge').innerText = totalItems;
             } catch (e) {}
+        }
+
+        // --- SAGA ORDER CORE LOGIC ---
+        async function checkout() {
+            const custId = localStorage.getItem('cust_id');
+            const res = await fetch(`/cart/${custId}`);
+            const data = await res.json();
+            if(!data.items || data.items.length === 0) {
+                showToast("Không có sản phẩm nào trong giỏ!", "error"); return;
+            }
+            
+            const orderItems = [];
+            data.items.forEach(cartItem => {
+                let type = 'laptops';
+                let price = 0;
+                let found = allLaptops.find(l => l.id == cartItem.product_id);
+                if(found) { price = found.price; type = 'laptops';} 
+                else {
+                    found = allClothes.find(c => c.id == cartItem.product_id);
+                    if(found) { type = 'clothes'; price = found.price; }
+                }
+                
+                orderItems.push({
+                    product_id: cartItem.product_id,
+                    type: type,
+                    quantity: cartItem.qty,
+                    price: price
+                });
+            });
+
+            showToast("Đang khởi tạo giao dịch (SAGA)...");
+            try {
+                const orderRes = await fetch('/orders', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ user_id: parseInt(custId), items: orderItems })
+                });
+                const orderData = await orderRes.json();
+                
+                if(orderRes.ok && orderData.payment_url) {
+                    const totalAmt = Number(orderData.order.total_amount).toLocaleString('vi-VN');
+                    const payId = new URL(orderData.payment_url).searchParams.get('pay_id');
+                    
+                    if(confirm(`Đơn hàng mã ${orderData.order.id.split('-')[0]} tạo thành công!\nTổng tiền: ${totalAmt} đ.\nBạn có muốn mô phỏng thanh toán Gateway ngay (Payment Success) không?`)) {
+                        await fetch('/payments/callback', {
+                            method: 'POST', headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({payment_id: payId, action: 'SUCCESS'})
+                        });
+                        showToast("Thanh toán THÀNH CÔNG! Đơn hàng sẽ sớm được Shipping.");
+                        
+                        // Track Purchase for Recommendation Engine
+                        orderItems.forEach(item => {
+                            trackEvent(item.product_id, 'PURCHASE');
+                        });
+                    } else {
+                        await fetch('/payments/callback', {
+                            method: 'POST', headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({payment_id: payId, action: 'FAILED'})
+                        });
+                        showToast("Thanh toán THẤT BẠI. Đã kích hoạt quá trình Huỷ đơn hàng.", "error");
+                    }
+                    
+                    document.getElementById('cart-tbody').innerHTML = '<tr><td colspan="2" class="empty-state"><i>🛒</i><p>Giỏ hàng của bạn đang trống</p></td></tr>';
+                    document.getElementById('cart-badge').innerText = '0';
+                    loadOrders();
+                    switchTab('orders');
+                } else {
+                    showToast(orderData.error || "Lỗi tạo đơn hàng do hết hàng!", "error");
+                }
+            } catch(e) {
+                showToast("Lỗi giao tiếp API Gateway", "error");
+            }
+        }
+
+        async function loadOrders() {
+            const custId = localStorage.getItem('cust_id');
+            try {
+                const res = await fetch('/orders');
+                const orders = await res.json();
+                const myOrders = orders.filter(o => o.user_id == custId);
+                
+                let html = '';
+                if(myOrders.length > 0) {
+                    myOrders.forEach(o => {
+                        const sLabel = o.status === 'COMPLETED' ? 'Hoàn thành' : (o.status.includes('FAILED') ? 'Huỷ/Thất bại' : 'Đang xử lý');
+                        html += `<tr>
+                            <td style="font-family: monospace; font-size:13px; color:var(--primary);">${o.id.split('-')[0]}***</td>
+                            <td>${new Date(o.created_at).toLocaleString('vi-VN')}</td>
+                            <td style="font-weight:700;">${Number(o.total_amount).toLocaleString('vi-VN')} đ</td>
+                            <td>${o.payment_status} (${sLabel})</td>
+                            <td><span style="background:var(--bg); padding:4px 8px; border-radius:4px;">${o.shipping_status === 'DELIVERED' ? '✅ Đã giao' : o.shipping_status}</span></td>
+                        </tr>`;
+                    });
+                } else {
+                     html = '<tr><td colspan="5" class="empty-state"><i>📦</i><p>Bạn chưa có đơn hàng nào.</p></td></tr>';
+                }
+                document.getElementById('orders-tbody').innerHTML = html;
+            } catch (e) {
+                console.error("Orders error:", e);
+            }
         }
     </script>
 </body>

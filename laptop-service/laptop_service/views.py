@@ -19,7 +19,8 @@ def laptop_list_create(request):
             name=data.get('name', 'Unknown'), 
             brand=data.get('brand', 'Unknown'),
             image_url=data.get('image_url', ''),
-            price=data.get('price', 0)
+            price=data.get('price', 0),
+            quantity=data.get('quantity', 10)
         )
         return Response({'msg': 'Laptop created', 'id': laptop.id})
     laptops = [l.to_dict() for l in Laptop.objects.all()]
@@ -38,8 +39,37 @@ def laptop_detail(request, pk):
         laptop.brand = data.get('brand', laptop.brand)
         laptop.image_url = data.get('image_url', laptop.image_url)
         laptop.price = data.get('price', laptop.price)
+        laptop.quantity = data.get('quantity', laptop.quantity)
         laptop.save()
         return Response({'msg': f'Laptop {pk} updated', 'laptop': laptop.to_dict()})
         
     laptop.delete()
     return Response({'msg': f'Laptop {pk} deleted'})
+
+@api_view(['POST'])
+def laptop_reserve(request, pk):
+    try:
+        laptop = Laptop.objects.get(pk=pk)
+        qty = int(json.loads(request.body).get('quantity', 1))
+        if laptop.quantity >= qty:
+            laptop.quantity -= qty
+            laptop.save()
+            return Response({'msg': 'Reserved successfully'})
+        return Response({'error': 'Out of stock or insufficient quantity'}, status=400)
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
+
+@api_view(['POST'])
+def laptop_release(request, pk):
+    try:
+        laptop = Laptop.objects.get(pk=pk)
+        qty = int(json.loads(request.body).get('quantity', 1))
+        laptop.quantity += qty
+        laptop.save()
+        return Response({'msg': 'Released successfully'})
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
+
+@api_view(['POST'])
+def laptop_confirm(request, pk):
+    return Response({'msg': 'Confirmed successfully'})

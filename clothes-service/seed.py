@@ -9,6 +9,7 @@ try:
     with connection.cursor() as cursor:
         cursor.execute("ALTER TABLE clothes_service_clothes ADD COLUMN IF NOT EXISTS brand VARCHAR(100) DEFAULT 'Unknown';")
         cursor.execute("ALTER TABLE clothes_service_clothes ADD COLUMN IF NOT EXISTS image_url VARCHAR(500);")
+        cursor.execute("ALTER TABLE clothes_service_clothes ADD COLUMN IF NOT EXISTS quantity INTEGER DEFAULT 10;")
 except Exception as e:
     print("SQL Patch error or already exists:", e)
 
