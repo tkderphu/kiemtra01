@@ -100,108 +100,108 @@ services:
       interval: 5s
       retries: 5
 
-  # ==========================================
-  postgres-order:
-    image: postgres:15
-    restart: always
-    environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: rootpassword
-      POSTGRES_DB: order_db
-    ports:
-      - "5435:5432"
-    volumes:
-      - postgres_order_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root"]
-      interval: 5s
-      retries: 5
+  # # ==========================================
+  # postgres-order:
+  #   image: postgres:15
+  #   restart: always
+  #   environment:
+  #     POSTGRES_USER: root
+  #     POSTGRES_PASSWORD: rootpassword
+  #     POSTGRES_DB: order_db
+  #   ports:
+  #     - "5435:5432"
+  #   volumes:
+  #     - postgres_order_data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U root"]
+  #     interval: 5s
+  #     retries: 5
 
-  postgres-payment:
-    image: postgres:15
-    restart: always
-    environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: rootpassword
-      POSTGRES_DB: payment_db
-    ports:
-      - "5436:5432"
-    volumes:
-      - postgres_payment_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root"]
-      interval: 5s
-      retries: 5
+  # postgres-payment:
+  #   image: postgres:15
+  #   restart: always
+  #   environment:
+  #     POSTGRES_USER: root
+  #     POSTGRES_PASSWORD: rootpassword
+  #     POSTGRES_DB: payment_db
+  #   ports:
+  #     - "5436:5432"
+  #   volumes:
+  #     - postgres_payment_data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U root"]
+  #     interval: 5s
+  #     retries: 5
 
-  postgres-shipping:
-    image: postgres:15
-    restart: always
-    environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: rootpassword
-      POSTGRES_DB: shipping_db
-    ports:
-      - "5437:5432"
-    volumes:
-      - postgres_shipping_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root"]
-      interval: 5s
-      retries: 5
+  # postgres-shipping:
+  #   image: postgres:15
+  #   restart: always
+  #   environment:
+  #     POSTGRES_USER: root
+  #     POSTGRES_PASSWORD: rootpassword
+  #     POSTGRES_DB: shipping_db
+  #   ports:
+  #     - "5437:5432"
+  #   volumes:
+  #     - postgres_shipping_data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U root"]
+  #     interval: 5s
+  #     retries: 5
 
-  postgres-comment:
-    image: postgres:15
-    restart: always
-    environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: rootpassword
-      POSTGRES_DB: comment_db
-    ports:
-      - "5438:5432"
-    volumes:
-      - postgres_comment_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root"]
-      interval: 5s
-      retries: 5
+  # postgres-comment:
+  #   image: postgres:15
+  #   restart: always
+  #   environment:
+  #     POSTGRES_USER: root
+  #     POSTGRES_PASSWORD: rootpassword
+  #     POSTGRES_DB: comment_db
+  #   ports:
+  #     - "5438:5432"
+  #   volumes:
+  #     - postgres_comment_data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U root"]
+  #     interval: 5s
+  #     retries: 5
 
-  postgres-recommend:
-    image: postgres:15
-    restart: always
-    environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: rootpassword
-      POSTGRES_DB: recommend_db
-    ports:
-      - "5439:5432"
-    volumes:
-      - postgres_recommend_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root"]
-      interval: 5s
-      retries: 5
+  # postgres-recommend:
+  #   image: postgres:15
+  #   restart: always
+  #   environment:
+  #     POSTGRES_USER: root
+  #     POSTGRES_PASSWORD: rootpassword
+  #     POSTGRES_DB: recommend_db
+  #   ports:
+  #     - "5439:5432"
+  #   volumes:
+  #     - postgres_recommend_data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U root"]
+  #     interval: 5s
+  #     retries: 5
 
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.3.2
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2181:2181"
+  # zookeeper:
+  #   image: confluentinc/cp-zookeeper:7.3.2
+  #   environment:
+  #     ZOOKEEPER_CLIENT_PORT: 2181
+  #     ZOOKEEPER_TICK_TIME: 2000
+  #   ports:
+  #     - "2181:2181"
 
-  kafka:
-    image: confluentinc/cp-kafka:7.3.2
-    depends_on:
-      - zookeeper
-    ports:
-      - "9092:9092"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  # kafka:
+  #   image: confluentinc/cp-kafka:7.3.2
+  #   depends_on:
+  #     - zookeeper
+  #   ports:
+  #     - "9092:9092"
+  #   environment:
+  #     KAFKA_BROKER_ID: 1
+  #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+  #     KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   # ==========================================
   # MICROSERVICES
@@ -291,87 +291,87 @@ services:
       DB_NAME: mobile_db
 
   # ==========================================
-  order-service:
-    build: ./order-service
-    ports:
-      - "8006:8000"
-    depends_on:
-      postgres-order:
-        condition: service_healthy
-    environment:
-      DB_HOST: postgres-order
-      DB_PORT: 5432
-      DB_USER: root
-      DB_PASSWORD: rootpassword
-      DB_NAME: order_db
+  # order-service:
+  #   build: ./order-service
+  #   ports:
+  #     - "8006:8000"
+  #   depends_on:
+  #     postgres-order:
+  #       condition: service_healthy
+  #   environment:
+  #     DB_HOST: postgres-order
+  #     DB_PORT: 5432
+  #     DB_USER: root
+  #     DB_PASSWORD: rootpassword
+  #     DB_NAME: order_db
 
-  payment-service:
-    build: ./payment-service
-    ports:
-      - "8007:8000"
-    depends_on:
-      postgres-payment:
-        condition: service_healthy
-    environment:
-      DB_HOST: postgres-payment
-      DB_PORT: 5432
-      DB_USER: root
-      DB_PASSWORD: rootpassword
-      DB_NAME: payment_db
+  # payment-service:
+  #   build: ./payment-service
+  #   ports:
+  #     - "8007:8000"
+  #   depends_on:
+  #     postgres-payment:
+  #       condition: service_healthy
+  #   environment:
+  #     DB_HOST: postgres-payment
+  #     DB_PORT: 5432
+  #     DB_USER: root
+  #     DB_PASSWORD: rootpassword
+  #     DB_NAME: payment_db
 
-  shipping-service:
-    build: ./shipping-service
-    ports:
-      - "8008:8000"
-    depends_on:
-      postgres-shipping:
-        condition: service_healthy
-    environment:
-      DB_HOST: postgres-shipping
-      DB_PORT: 5432
-      DB_USER: root
-      DB_PASSWORD: rootpassword
-      DB_NAME: shipping_db
+  # shipping-service:
+  #   build: ./shipping-service
+  #   ports:
+  #     - "8008:8000"
+  #   depends_on:
+  #     postgres-shipping:
+  #       condition: service_healthy
+  #   environment:
+  #     DB_HOST: postgres-shipping
+  #     DB_PORT: 5432
+  #     DB_USER: root
+  #     DB_PASSWORD: rootpassword
+  #     DB_NAME: shipping_db
 
-  comment-rate-service:
-    build: ./comment-rate-service
-    ports:
-      - "8009:8000"
-    depends_on:
-      postgres-comment:
-        condition: service_healthy
-    environment:
-      DB_HOST: postgres-comment
-      DB_PORT: 5432
-      DB_USER: root
-      DB_PASSWORD: rootpassword
-      DB_NAME: comment_db
+  # comment-rate-service:
+  #   build: ./comment-rate-service
+  #   ports:
+  #     - "8009:8000"
+  #   depends_on:
+  #     postgres-comment:
+  #       condition: service_healthy
+  #   environment:
+  #     DB_HOST: postgres-comment
+  #     DB_PORT: 5432
+  #     DB_USER: root
+  #     DB_PASSWORD: rootpassword
+  #     DB_NAME: comment_db
 
-  tracking-service:
-    build: ./tracking-service
-    ports:
-      - "8010:8000"
-    depends_on:
-      - kafka
-    environment:
-      KAFKA_BROKER: kafka:9092
+  # tracking-service:
+  #   build: ./tracking-service
+  #   ports:
+  #     - "8010:8000"
+  #   depends_on:
+  #     - kafka
+  #   environment:
+  #     KAFKA_BROKER: kafka:9092
 
-  recommendation-service:
-    build: ./recommendation-service
-    ports:
-      - "8011:8000"
-    depends_on:
-      postgres-recommend:
-        condition: service_healthy
-      kafka:
-        condition: service_started
-    environment:
-      DB_HOST: postgres-recommend
-      DB_PORT: 5432
-      DB_USER: root
-      DB_PASSWORD: rootpassword
-      DB_NAME: recommend_db
-      KAFKA_BROKER: kafka:9092
+  # recommendation-service:
+  #   build: ./recommendation-service
+  #   ports:
+  #     - "8011:8000"
+  #   depends_on:
+  #     postgres-recommend:
+  #       condition: service_healthy
+  #     kafka:
+  #       condition: service_started
+  #   environment:
+  #     DB_HOST: postgres-recommend
+  #     DB_PORT: 5432
+  #     DB_USER: root
+  #     DB_PASSWORD: rootpassword
+  #     DB_NAME: recommend_db
+  #     KAFKA_BROKER: kafka:9092
 
   # ==========================================
   # API GATEWAY
