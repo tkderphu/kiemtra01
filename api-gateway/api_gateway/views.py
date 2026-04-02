@@ -15,6 +15,7 @@ SHIPPING_URL = os.environ.get('SHIPPING_SERVICE_URL', 'http://shipping-service:8
 COMMENT_URL = os.environ.get('COMMENT_SERVICE_URL', 'http://comment-rate-service:8000')
 TRACK_URL = os.environ.get('TRACKING_SERVICE_URL', 'http://tracking-service:8000')
 RECOMMEND_URL = os.environ.get('RECOMMEND_SERVICE_URL', 'http://recommendation-service:8000')
+MOBILE_URL = os.environ.get('MOBILE_SERVICE_URL', 'http://mobile-service:8000')
 
 def health_check(request):
     return JsonResponse({'status': 'gateway ok'})
@@ -39,6 +40,7 @@ def proxy_request(request, path):
         'comments/': COMMENT_URL,
         'track/': TRACK_URL,
         'recommend/': RECOMMEND_URL,
+        'mobiles/': MOBILE_URL,
         'staff': STAFF_URL,
         'customer': CUSTOMER_URL,
         'cart': CART_URL,
@@ -50,6 +52,7 @@ def proxy_request(request, path):
         'comments': COMMENT_URL,
         'track': TRACK_URL,
         'recommend': RECOMMEND_URL,
+        'mobiles': MOBILE_URL,
     }
     
     target_base = None

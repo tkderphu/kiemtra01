@@ -84,6 +84,22 @@ services:
       interval: 5s
       retries: 5
 
+  postgres-mobile:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: mobile_db
+    ports:
+      - "5440:5432"
+    volumes:
+      - postgres_mobile_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root"]
+      interval: 5s
+      retries: 5
+
   # ==========================================
   postgres-order:
     image: postgres:15
@@ -260,6 +276,20 @@ services:
       DB_PASSWORD: rootpassword
       DB_NAME: clothes_db
 
+  mobile-service:
+    build: ./mobile-service
+    ports:
+      - "8012:8000"
+    depends_on:
+      postgres-mobile:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres-mobile
+      DB_PORT: 5432
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      DB_NAME: mobile_db
+
   # ==========================================
   order-service:
     build: ./order-service
@@ -356,6 +386,7 @@ services:
       - cart-service
       - laptop-service
       - clothes-service
+      - mobile-service
       - order-service
       - payment-service
       - shipping-service
@@ -374,3 +405,4 @@ volumes:
   postgres_shipping_data:
   postgres_comment_data:
   postgres_recommend_data:
+  postgres_mobile_data:
