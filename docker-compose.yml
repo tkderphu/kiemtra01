@@ -48,7 +48,7 @@ services:
     volumes:
       - postgres_cart_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root"]
+      test: ["CMD-SHELL", "pg_isready -U root -d $$POSTGRES_DB"]
       interval: 5s
       retries: 5
 
@@ -64,7 +64,7 @@ services:
     volumes:
       - postgres_laptop_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root"]
+      test: ["CMD-SHELL", "pg_isready -U root -d $$POSTGRES_DB"]
       interval: 5s
       retries: 5
 
@@ -80,7 +80,7 @@ services:
     volumes:
       - postgres_clothes_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root"]
+      test: ["CMD-SHELL", "pg_isready -U root -d $$POSTGRES_DB"]
       interval: 5s
       retries: 5
 
@@ -96,7 +96,7 @@ services:
     volumes:
       - postgres_mobile_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root"]
+      test: ["CMD-SHELL", "pg_isready -U root -d $$POSTGRES_DB"]
       interval: 5s
       retries: 5
 
