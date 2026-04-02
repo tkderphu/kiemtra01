@@ -387,12 +387,12 @@ services:
       - laptop-service
       - clothes-service
       - mobile-service
-      - order-service
-      - payment-service
-      - shipping-service
-      - comment-rate-service
-      - tracking-service
-      - recommendation-service
+      # - order-service
+      # - payment-service
+      # - shipping-service
+      # - comment-rate-service
+      # - tracking-service
+      # - recommendation-service
 
 volumes:
   mysql_staff_data:
