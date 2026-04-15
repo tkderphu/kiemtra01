@@ -163,6 +163,11 @@
                        <div class="dash-icon green">👕</div>
                     </div>
                     <div class="dash-card">
+                       <div class="dash-title">TỔNG SẢN PHẨM ĐIỆN THOẠI</div>
+                       <div class="dash-value" id="count-mobile">0</div>
+                       <div class="dash-icon blue">📱</div>
+                    </div>
+                    <div class="dash-card">
                        <div class="dash-title">TỔNG SẢN PHẨM LAPTOP</div>
                        <div class="dash-value" id="count-laptop">0</div>
                        <div class="dash-icon purple">💻</div>
@@ -209,6 +214,23 @@
                         <tbody id="clothes-tbody"></tbody>
                     </table>
                 </div>
+
+                <div class="card">
+                    <div class="table-header">
+                        <h3>Kho Điện Thoại 📱</h3>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã SP</th>
+                                <th>Tên & Thương Hiệu</th>
+                                <th>Giá Niêm Yết</th>
+                                <th style="text-align: right;">Bảng Điều Khiển</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mobile-tbody"></tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- Add Product Tab -->
@@ -220,6 +242,7 @@
                         <label>Phân loại danh mục</label>
                         <select id="prod-type">
                             <option value="laptops">Thiết bị Laptop</option>
+                            <option value="mobiles">Điện thoại</option>
                             <option value="clothes">Thời trang (Quần áo)</option>
                         </select>
                     </div>
@@ -398,12 +421,17 @@
                 const clRes = await fetch('/clothes/count');
                 const clData = await clRes.json();
                 
+                const mbRes = await fetch('/mobiles/count');
+                const mbData = await mbRes.json();
+                
                 const cLp = lpData.count || 0;
                 const cCl = clData.count || 0;
+                const cMb = mbData.count || 0;
                 
-                document.getElementById('count-all').innerText = cLp + cCl;
+                document.getElementById('count-all').innerText = cLp + cCl + cMb;
                 document.getElementById('count-clothes').innerText = cCl;
                 document.getElementById('count-laptop').innerText = cLp;
+                document.getElementById('count-mobile').innerText = cMb;
             } catch (e) {
                 console.error("Lỗi:", e);
             }
@@ -462,6 +490,32 @@
                     });
                 }
                 document.getElementById('clothes-tbody').innerHTML = clHTML || '<tr><td colspan="4" style="text-align:center;">Dữ liệu trống</td></tr>';
+
+                // Mobiles
+                const mbRes = await fetch('/mobiles');
+                const mobiles = await mbRes.json();
+                let mbHTML = '';
+                if(Array.isArray(mobiles)) {
+                    mobiles.forEach(m => {
+                        const escapedName = m.name ? m.name.replace(/'/g, "\\'") : '';
+                        const escapedBrand = m.brand && m.brand !== 'Unknown' ? m.brand.replace(/'/g, "\\'") : '';
+                        const escapedImg = m.image_url ? m.image_url.replace(/'/g, "\\'") : '';
+                        
+                        mbHTML += `<tr>
+                            <td style="color: var(--text-light);">#${m.id}</td>
+                            <td>
+                                <div style="font-weight: 600; color: #0f172a;">${m.name}</div>
+                                <div style="font-size: 13px; color: var(--text-light); margin-top:2px;">${m.brand || 'Khác'}</div>
+                            </td>
+                            <td><span class="badge-price">${Number(m.price).toLocaleString('vi-VN')} đ</span></td>
+                            <td style="text-align: right;">
+                                <button class="action-btn" onclick="openEdit('mobiles', ${m.id}, '${escapedName}', '${escapedBrand}', ${m.price}, '${escapedImg}')">Sửa</button>
+                                <button class="action-btn del" onclick="deleteProduct('mobiles', ${m.id}, '${escapedName}')">Xoá</button>
+                            </td>
+                        </tr>`;
+                    });
+                }
+                document.getElementById('mobile-tbody').innerHTML = mbHTML || '<tr><td colspan="4" style="text-align:center;">Dữ liệu trống</td></tr>';
             } catch (e) {
                 console.error("Lỗi:", e);
                 showToast("Lỗi kết nối khi tải dữ liệu sản phẩm", "error");

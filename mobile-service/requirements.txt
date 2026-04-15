@@ -1,4 +1,6 @@
-Django==4.2.11
-djangorestframework==3.15.1
-psycopg2==2.9.9
-django-cors-headers==4.3.1
+Django>=4.2,<5.0
+psycopg2-binary
+djangorestframework
+PyJWT
+django-cors-headers
+kafka-python==2.0.2

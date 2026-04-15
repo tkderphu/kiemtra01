@@ -16,6 +16,9 @@ COMMENT_URL = os.environ.get('COMMENT_SERVICE_URL', 'http://comment-rate-service
 TRACK_URL = os.environ.get('TRACKING_SERVICE_URL', 'http://tracking-service:8000')
 RECOMMEND_URL = os.environ.get('RECOMMEND_SERVICE_URL', 'http://recommendation-service:8000')
 MOBILE_URL = os.environ.get('MOBILE_SERVICE_URL', 'http://mobile-service:8000')
+BEHAVIOR_URL = os.environ.get('BEHAVIOR_SERVICE_URL', 'http://ai_behavior:8001')
+KB_URL = os.environ.get('KB_SERVICE_URL', 'http://ai_kb:8002')
+CHATBOT_URL = os.environ.get('CHATBOT_SERVICE_URL', 'http://ai_chatbot:8003')
 
 def health_check(request):
     return JsonResponse({'status': 'gateway ok'})
@@ -53,6 +56,18 @@ def proxy_request(request, path):
         'track': TRACK_URL,
         'recommend': RECOMMEND_URL,
         'mobiles': MOBILE_URL,
+        'analyze/': BEHAVIOR_URL,
+        'analyze': BEHAVIOR_URL,
+        'rebuild/': KB_URL,
+        'rebuild': KB_URL,
+        'chat/': CHATBOT_URL,
+        'chat': CHATBOT_URL,
+        'ai/analyze/': BEHAVIOR_URL,
+        'ai/analyze': BEHAVIOR_URL,
+        'ai/kb/': KB_URL,
+        'ai/kb': KB_URL,
+        'ai/chat/': CHATBOT_URL,
+        'ai/chat': CHATBOT_URL,
     }
     
     target_base = None

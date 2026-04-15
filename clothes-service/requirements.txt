@@ -3,3 +3,4 @@ psycopg2-binary
 djangorestframework
 PyJWT
 django-cors-headers
+kafka-python==2.0.2

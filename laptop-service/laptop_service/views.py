@@ -2,7 +2,23 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.http import JsonResponse
 import json
+import os
+from kafka import KafkaProducer
 from .models import Laptop
+
+def broadcast_product_update(action, product_dict):
+    try:
+        kafka_broker = os.environ.get('KAFKA_BROKER', 'kafka:9092')
+        producer = KafkaProducer(
+            bootstrap_servers=kafka_broker,
+            value_serializer=lambda v: json.dumps(v).encode('utf-8')
+        )
+        msg = product_dict.copy()
+        msg['action'] = action
+        producer.send('product_updates', msg)
+        producer.flush()
+    except Exception as e:
+        print(f"Failed to produce message: {e}")
 
 def health_check(request):
     return JsonResponse({'status': 'laptop service ok'})
@@ -22,6 +38,9 @@ def laptop_list_create(request):
             price=data.get('price', 0),
             quantity=data.get('quantity', 10)
         )
+        msg_dict = laptop.to_dict()
+        msg_dict['category'] = 'laptop'
+        broadcast_product_update('create', msg_dict)
         return Response({'msg': 'Laptop created', 'id': laptop.id})
     laptops = [l.to_dict() for l in Laptop.objects.all()]
     return Response(laptops)
@@ -41,6 +60,9 @@ def laptop_detail(request, pk):
         laptop.price = data.get('price', laptop.price)
         laptop.quantity = data.get('quantity', laptop.quantity)
         laptop.save()
+        msg_dict = laptop.to_dict()
+        msg_dict['category'] = 'laptop'
+        broadcast_product_update('update', msg_dict)
         return Response({'msg': f'Laptop {pk} updated', 'laptop': laptop.to_dict()})
         
     laptop.delete()

@@ -181,27 +181,27 @@ services:
   #     interval: 5s
   #     retries: 5
 
-  # zookeeper:
-  #   image: confluentinc/cp-zookeeper:7.3.2
-  #   environment:
-  #     ZOOKEEPER_CLIENT_PORT: 2181
-  #     ZOOKEEPER_TICK_TIME: 2000
-  #   ports:
-  #     - "2181:2181"
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.2
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
 
-  # kafka:
-  #   image: confluentinc/cp-kafka:7.3.2
-  #   depends_on:
-  #     - zookeeper
-  #   ports:
-  #     - "9092:9092"
-  #   environment:
-  #     KAFKA_BROKER_ID: 1
-  #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-  #     KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  kafka:
+    image: confluentinc/cp-kafka:7.3.2
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   # ==========================================
   # MICROSERVICES
@@ -255,12 +255,15 @@ services:
     depends_on:
       postgres-laptop:
         condition: service_healthy
+      kafka:
+        condition: service_started
     environment:
       DB_HOST: postgres-laptop
       DB_PORT: 5432
       DB_USER: root
       DB_PASSWORD: rootpassword
       DB_NAME: laptop_db
+      KAFKA_BROKER: kafka:9092
 
   clothes-service:
     build: ./clothes-service
@@ -269,12 +272,15 @@ services:
     depends_on:
       postgres-clothes:
         condition: service_healthy
+      kafka:
+        condition: service_started
     environment:
       DB_HOST: postgres-clothes
       DB_PORT: 5432
       DB_USER: root
       DB_PASSWORD: rootpassword
       DB_NAME: clothes_db
+      KAFKA_BROKER: kafka:9092
 
   mobile-service:
     build: ./mobile-service
@@ -283,12 +289,15 @@ services:
     depends_on:
       postgres-mobile:
         condition: service_healthy
+      kafka:
+        condition: service_started
     environment:
       DB_HOST: postgres-mobile
       DB_PORT: 5432
       DB_USER: root
       DB_PASSWORD: rootpassword
       DB_NAME: mobile_db
+      KAFKA_BROKER: kafka:9092
 
   # ==========================================
   # order-service:
@@ -394,6 +403,48 @@ services:
       # - tracking-service
       # - recommendation-service
 
+  # ==========================================
+  # AI SERVICES
+  # ==========================================
+  redis:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  ai_behavior:
+    build: ./ai-service/behavior
+    ports:
+      - "8081:8001"
+    depends_on:
+      - redis
+
+  ai_kb:
+    build: ./ai-service/knowledge_base
+    ports:
+      - "8082:8002"
+    volumes:
+      - chroma_data:/data/chroma
+    depends_on:
+      - kafka
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - KAFKA_BROKER=kafka:9092
+
+  ai_chatbot:
+    build: ./ai-service/chatbot
+    ports:
+      - "8083:8003"
+    depends_on:
+      - ai_behavior
+      - ai_kb
+    volumes:
+      - chroma_data:/data/chroma
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+
 volumes:
   mysql_staff_data:
   mysql_customer_data:
@@ -406,3 +457,5 @@ volumes:
   postgres_comment_data:
   postgres_recommend_data:
   postgres_mobile_data:
+  chroma_data:
+  redis_data:

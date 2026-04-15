@@ -2,7 +2,23 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.http import JsonResponse
 import json
+import os
+from kafka import KafkaProducer
 from .models import Mobile
+
+def broadcast_product_update(action, product_dict):
+    try:
+        kafka_broker = os.environ.get('KAFKA_BROKER', 'kafka:9092')
+        producer = KafkaProducer(
+            bootstrap_servers=kafka_broker,
+            value_serializer=lambda v: json.dumps(v).encode('utf-8')
+        )
+        msg = product_dict.copy()
+        msg['action'] = action
+        producer.send('product_updates', msg)
+        producer.flush()
+    except Exception as e:
+        print(f"Failed to produce message: {e}")
 
 def health_check(request):
     return JsonResponse({'status': 'mobile service ok'})
@@ -22,6 +38,9 @@ def mobile_list_create(request):
             price=data.get('price', 0),
             quantity=data.get('quantity', 10)
         )
+        msg_dict = mobile.to_dict()
+        msg_dict['category'] = 'mobile'
+        broadcast_product_update('create', msg_dict)
         return Response({'msg': 'Mobile created', 'id': mobile.id})
     mobiles = [l.to_dict() for l in Mobile.objects.all()]
     return Response(mobiles)
@@ -41,6 +60,9 @@ def mobile_detail(request, pk):
         mobile.price = data.get('price', mobile.price)
         mobile.quantity = data.get('quantity', mobile.quantity)
         mobile.save()
+        msg_dict = mobile.to_dict()
+        msg_dict['category'] = 'mobile'
+        broadcast_product_update('update', msg_dict)
         return Response({'msg': f'Mobile {pk} updated', 'mobile': mobile.to_dict()})
         
     mobile.delete()

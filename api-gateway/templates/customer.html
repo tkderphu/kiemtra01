@@ -79,7 +79,7 @@
         .product-card .img-container { height: 160px; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; overflow: hidden; }
         .product-card img { max-width: 100%; max-height: 100%; object-fit: contain; }
         .product-card .brand-label { font-size: 12px; color: var(--text-light); text-transform: uppercase; font-weight: 700; margin-bottom: 5px; }
-        .product-card .name { font-size: 14px; font-weight: 500; color: var(--text-main); margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; line-height: 1.4;}
+        .product-card .name { font-size: 14px; font-weight: 500; color: var(--text-main); margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; line-height: 1.4;}
         .product-card .price { font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 15px; }
         .product-card .add-cart-btn { background: white; color: var(--primary); border: 1px solid var(--primary); padding: 8px; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.2s; width: 100%; font-family: inherit;}
         .product-card:hover .add-cart-btn { background: var(--primary); color: white; }
@@ -212,6 +212,15 @@
                     </div>
                     <div class="grid" id="clothes-preview-grid"></div>
                 </div>
+
+                <!-- Mobiles Section -->
+                <div class="section-box">
+                    <div class="section-header">
+                        <div class="section-title">Điện Thoại Thông Minh</div>
+                        <a class="view-all" onclick="viewAll('mobile')">Xem tất cả ></a>
+                    </div>
+                    <div class="grid" id="mobile-preview-grid"></div>
+                </div>
             </div>
 
             <!-- Filtered Category View -->
@@ -325,6 +334,7 @@
         // Global State
         let allLaptops = [];
         let allClothes = [];
+        let allMobiles = [];
         let currentFilterCategory = '';
         let currentFilterBrand = 'all';
 
@@ -459,6 +469,14 @@
                     renderPreviewGrid('clothes-preview-grid', allClothes);
                 }
 
+                // Mobiles
+                const mbRes = await fetch('/mobiles');
+                allMobiles = await mbRes.json();
+                if(Array.isArray(allMobiles)) {
+                    allMobiles.forEach(m => m.type = 'mobiles');
+                    renderPreviewGrid('mobile-preview-grid', allMobiles);
+                }
+
                 // Load Recommendations
                 loadRecommendations();
             } catch (e) {
@@ -480,7 +498,7 @@
                     if(recIds.length > 0) {
                         const recItems = [];
                         recIds.forEach(id => {
-                            let item = allLaptops.find(x => x.id === id) || allClothes.find(x => x.id === id);
+                            let item = allLaptops.find(x => x.id === id) || allClothes.find(x => x.id === id) || allMobiles.find(x => x.id === id);
                             if(item && recItems.length < 5) recItems.push(item);
                         });
                         if(recItems.length > 0) {
@@ -528,8 +546,8 @@
         }
 
         function renderFilterPage() {
-            const items = currentFilterCategory === 'laptop' ? allLaptops : allClothes;
-            const title = currentFilterCategory === 'laptop' ? 'LAPTOP CHÍNH HÃNG' : 'QUẦN ÁO THỜI TRANG';
+            const items = currentFilterCategory === 'laptop' ? allLaptops : (currentFilterCategory === 'clothes' ? allClothes : allMobiles);
+            const title = currentFilterCategory === 'laptop' ? 'LAPTOP CHÍNH HÃNG' : (currentFilterCategory === 'clothes' ? 'QUẦN ÁO THỜI TRANG' : 'ĐIỆN THOẠI THÔNG MINH');
             
             document.getElementById('filter-title').innerText = title;
             
@@ -571,6 +589,8 @@
                 item = allLaptops.find(x => x.id === id);
             } else if (type === 'clothes') {
                 item = allClothes.find(x => x.id === id);
+            } else if (type === 'mobiles') {
+                item = allMobiles.find(x => x.id === id);
             }
             
             if(!item) return;
@@ -719,6 +739,7 @@
                         let n = `Sản phẩm #${i.product_id}`;
                         let l = allLaptops.find(x => x.id == i.product_id);
                         if(!l) l = allClothes.find(x => x.id == i.product_id);
+                        if(!l) l = allMobiles.find(x => x.id == i.product_id);
                         if(l) n = l.name;
                         
                         html += `<tr>
@@ -768,6 +789,10 @@
                 else {
                     found = allClothes.find(c => c.id == cartItem.product_id);
                     if(found) { type = 'clothes'; price = found.price; }
+                    else {
+                        found = allMobiles.find(m => m.id == cartItem.product_id);
+                        if(found) { type = 'mobiles'; price = found.price; }
+                    }
                 }
                 
                 orderItems.push({
@@ -849,6 +874,90 @@
                 console.error("Orders error:", e);
             }
         }
+
+        // Chatbot Integration Logic
+        function toggleChat() {
+            document.getElementById('chat-window').classList.toggle('hidden');
+        }
+
+        let chatHistory = [];
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const msg = input.value.trim();
+            if(!msg) return;
+            
+            input.value = '';
+            
+            const msgsBox = document.getElementById('chat-messages');
+            msgsBox.innerHTML += `<div style="background: var(--primary); color: white; padding: 10px 15px; border-radius: 16px; border-bottom-right-radius: 4px; max-width: 85%; align-self: flex-end; font-size: 14px; line-height: 1.4;">${msg}</div>`;
+            msgsBox.scrollTop = msgsBox.scrollHeight;
+            
+            const typingId = 'typing-' + Date.now();
+            msgsBox.innerHTML += `<div id="${typingId}" style="background: #eef2ff; color: #666; padding: 10px 15px; border-radius: 16px; border-bottom-left-radius: 4px; max-width: 85%; align-self: flex-start; font-size: 14px; font-style: italic;">Đang trả lời...</div>`;
+            msgsBox.scrollTop = msgsBox.scrollHeight;
+            
+            const custId = localStorage.getItem('cust_id') || 0;
+            
+            try {
+                const res = await fetch('/ai/chat/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: parseInt(custId), message: msg, conversation_history: chatHistory })
+                });
+                
+                document.getElementById(typingId).remove();
+                
+                if(res.ok) {
+                    const data = await res.json();
+                    chatHistory.push({"role": "user", "content": msg});
+                    chatHistory.push({"role": "assistant", "content": data.reply});
+                    
+                    let replyHtml = data.reply.replace(/\n/g, '<br>');
+                    
+                    if(data.sources && data.sources.length > 0) {
+                        replyHtml += `<div style="margin-top: 10px; font-size: 11px; padding-top: 8px; border-top: 1px dashed #ccc; color: #555;"><strong>Nguồn tham khảo:</strong><br>`;
+                        data.sources.forEach(s => {
+                            replyHtml += `- ${s.name} (${Number(s.price).toLocaleString('vi-VN')} đ)<br>`;
+                        });
+                        replyHtml += `</div>`;
+                    }
+                    
+                    msgsBox.innerHTML += `<div style="background: #eef2ff; padding: 10px 15px; border-radius: 16px; border-bottom-left-radius: 4px; max-width: 85%; align-self: flex-start; font-size: 14px; line-height: 1.4; color: #333;">${replyHtml}</div>`;
+                } else {
+                    msgsBox.innerHTML += `<div style="background: #fee2e2; color: #b91c1c; padding: 10px 15px; border-radius: 16px; border-bottom-left-radius: 4px; max-width: 85%; align-self: flex-start; font-size: 14px;">Hệ thống AI hiện đang bận. Vui lòng thử lại.</div>`;
+                }
+            } catch(e) {
+                document.getElementById(typingId).remove();
+                msgsBox.innerHTML += `<div style="background: #fee2e2; color: #b91c1c; padding: 10px 15px; border-radius: 16px; border-bottom-left-radius: 4px; max-width: 85%; align-self: flex-start; font-size: 14px;">Mất kết nối tới server AI Chatbot.</div>`;
+            }
+            msgsBox.scrollTop = msgsBox.scrollHeight;
+        }
     </script>
+    
+    <!-- Chatbot Floating Widget -->
+    <div id="chat-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; font-family: 'Roboto', sans-serif;">
+        <div id="chat-button" style="background: var(--primary); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.2s;" onclick="toggleChat()">
+            <span style="font-size: 28px;">💬</span>
+        </div>
+        
+        <div id="chat-window" class="hidden" style="position: absolute; bottom: 80px; right: 0; width: 350px; height: 500px; background: #fff; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden; border: 1px solid #eee;">
+            <div style="background: var(--primary); color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+                <span style="display: flex; align-items: center; gap: 8px;">🤖 <span>TechStore AI Assistant</span></span>
+                <span style="cursor: pointer; font-size: 20px; padding: 0 5px;" onclick="toggleChat()">×</span>
+            </div>
+            
+            <div id="chat-messages" style="flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #fafafa;">
+                <div style="background: #eef2ff; padding: 10px 15px; border-radius: 16px; border-bottom-left-radius: 4px; max-width: 85%; align-self: flex-start; font-size: 14px; line-height: 1.4; color: #333;">
+                    Xin chào! Tôi là Trợ lý AI của TechStore, có đọc được lịch sử mua sắm của bạn. Tôi có thể tư vấn sản phẩm gì cho bạn hôm nay?
+                </div>
+            </div>
+            
+            <div style="padding: 10px; background: white; border-top: 1px solid #eee; display: flex; gap: 8px;">
+                <input type="text" id="chat-input" placeholder="Nhập câu hỏi tại đây..." style="flex: 1; padding: 10px 15px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 14px; font-family: inherit;" onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                <button onclick="sendChatMessage()" style="background: var(--primary); color: white; border: none; width: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">➤</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

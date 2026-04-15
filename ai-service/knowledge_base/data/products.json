@@ -1,0 +1,32 @@
+[
+    {
+        "id": 10,
+        "name": "Sony WH-1000XM5",
+        "price": 8490000,
+        "category": "Tai nghe",
+        "description": "Sony WH-1000XM5 có công nghệ chống ồn chủ động hàng đầu. Chất âm cân bằng, chi tiết cao và dễ nghe lâu. Tai nghe có thời lượng pin dài và kết nối đa điểm thông minh.",
+        "stock": 35,
+        "rating": 4.8,
+        "use_cases": ["chong_on", "am_nhac", "di_chuyen"]
+    },
+    {
+        "id": 11,
+        "name": "AirPods Pro 2",
+        "price": 5990000,
+        "category": "Tai nghe",
+        "description": "Tai nghe không dây Apple AirPods Pro 2 với chip H2, chống ồn chủ động xuất sắc, xuyên âm tự nhiên.",
+        "stock": 100,
+        "rating": 4.9,
+        "use_cases": ["chong_on", "the_thao", "apple_ecosystem"]
+    },
+    {
+        "id": 20,
+        "name": "Áo thun cổ tròn Uniqlo",
+        "price": 299000,
+        "category": "Áo",
+        "description": "Áo thun cổ tròn Uniqlo màu trắng tinh khôi, chất liệu cotton 100% siêu thoáng mát, thấm hút mồ hôi tốt, phù hợp đi chơi hay đi làm.",
+        "stock": 200,
+        "rating": 4.6,
+        "use_cases": ["mua_he", "di_choi", "casual"]
+    }
+]
